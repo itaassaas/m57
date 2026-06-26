@@ -10,7 +10,11 @@
         @endif
     </a>
     <div class="card-body">
-        <div class="eyebrow">{{ $product['owner']['name'] }}</div>
+        @if(!empty($showMeta))
+            <div class="eyebrow">{{ $product['owner']['name'] ?? 'Hub' }} · {{ $product['category_name'] ?? 'Catalogo' }}</div>
+        @else
+            <div class="eyebrow">{{ $product['owner']['name'] ?? 'Hub' }}</div>
+        @endif
         <a href="{{ route('products.show', $product['id']) }}" class="title">{{ $product['name'] }}</a>
         <div class="price-row">
             <span class="price">${{ number_format($product['price'], 0, ',', '.') }}</span>
@@ -19,6 +23,13 @@
             @endif
         </div>
         @if(!empty($withActions))
+            @if(!empty($showMeta))
+                <div class="rating-row">
+                    <span>★ 4.8</span>
+                    <span>·</span>
+                    <span>SKU {{ ($product['sku'] ?? '') ?: 'N/A' }}</span>
+                </div>
+            @endif
             <div class="card-actions">
                 <a class="quick-link" href="{{ route('products.show', $product['id']) }}">Ver</a>
                 <form method="post" action="{{ route('cart.add') }}">

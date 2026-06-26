@@ -61,6 +61,54 @@ class ExampleTest extends TestCase
             ->assertDontSee('Soporte celular');
     }
 
+    public function test_home_products_endpoint_returns_next_fashion_page(): void
+    {
+        $mock = Mockery::mock(HubMarketplaceApi::class);
+        $products = collect(range(1, 25))->map(fn (int $id) => [
+            'id' => $id,
+            'name' => "Vestido {$id}",
+            'sku' => "SKU-{$id}",
+            'price' => 99000,
+            'stock' => 5,
+            'image' => 'https://example.com/product.jpg',
+            'secondary_image' => null,
+            'owner' => ['id' => 10, 'name' => 'Hub Demo'],
+            'categories' => [['id' => 2, 'name' => 'Moda']],
+            'category_name' => 'Moda',
+            'is_featured' => true,
+            'type' => 'simple',
+        ])->push([
+            'id' => 26,
+            'name' => 'Soporte celular',
+            'sku' => 'SKU-26',
+            'price' => 39000,
+            'stock' => 5,
+            'image' => 'https://example.com/phone.jpg',
+            'secondary_image' => null,
+            'owner' => ['id' => 10, 'name' => 'Hub Demo'],
+            'categories' => [['id' => 3, 'name' => 'Tecnología']],
+            'category_name' => 'Tecnología',
+            'is_featured' => false,
+            'type' => 'simple',
+        ])->all();
+
+        $mock->shouldReceive('allProducts')->once()->andReturn([
+            'data' => $products,
+            'meta' => ['page' => 1, 'per_page' => 240, 'total' => 26, 'last_page' => 1],
+        ]);
+
+        $this->app->instance(HubMarketplaceApi::class, $mock);
+
+        $response = $this->getJson('/home/products?page=2');
+
+        $response->assertOk()
+            ->assertJsonPath('meta.page', 2)
+            ->assertJsonPath('meta.total', 25)
+            ->assertSee('Vestido 25')
+            ->assertDontSee('Vestido 1')
+            ->assertDontSee('Soporte celular');
+    }
+
     public function test_product_page_renders_redesigned_pdp(): void
     {
         $mock = Mockery::mock(HubMarketplaceApi::class);

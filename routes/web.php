@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [StorefrontController::class, 'index'])->name('home');
+Route::get('/home/products', [StorefrontController::class, 'homeProducts'])->name('home.products');
 Route::get('/categories/{categoryId}', [StorefrontController::class, 'category'])->name('categories.show');
 Route::get('/categories/{categoryId}/products', [StorefrontController::class, 'categoryProducts'])->name('categories.products');
 Route::get('/products/{productId}', [StorefrontController::class, 'show'])->name('products.show');

@@ -27,15 +27,11 @@ class StorefrontController extends Controller
         }
 
         $categories = $this->hub->categories();
-        $products = $this->hub->allProducts([
-            'q' => $request->string('q')->toString(),
-            'category' => $request->integer('category'),
-            'sort' => $request->string('sort')->toString() ?: 'newest',
-        ]);
+        $products = $this->paginatedHomeProducts($request);
 
         return view('storefront.index', [
-            'products' => $this->homeFashionProducts($products['data'] ?? []),
-            'meta' => $products['meta'] ?? [],
+            'products' => $products['data'],
+            'meta' => $products['meta'],
             'categories' => $categories,
             'cartCount' => $this->cartCount(),
             'filters' => [
@@ -44,6 +40,44 @@ class StorefrontController extends Controller
                 'sort' => $request->string('sort')->toString() ?: 'newest',
             ],
         ]);
+    }
+
+    public function homeProducts(Request $request): JsonResponse
+    {
+        $products = $this->paginatedHomeProducts($request);
+
+        return response()->json([
+            'html' => view('storefront.partials.product-cards', [
+                'products' => $products['data'],
+                'chip' => 'HOT',
+                'showOldPrice' => true,
+                'withActions' => true,
+                'showMeta' => true,
+            ])->render(),
+            'meta' => $products['meta'],
+        ]);
+    }
+
+    private function paginatedHomeProducts(Request $request): array
+    {
+        $products = $this->hub->allProducts([
+            'q' => $request->string('q')->toString(),
+            'category' => $request->integer('category'),
+            'sort' => $request->string('sort')->toString() ?: 'newest',
+        ]);
+        $items = collect($this->homeFashionProducts($products['data'] ?? []))->values();
+        $page = max(1, $request->integer('page', 1));
+        $perPage = 24;
+
+        return [
+            'data' => $items->forPage($page, $perPage)->values()->all(),
+            'meta' => [
+                'page' => $page,
+                'per_page' => $perPage,
+                'total' => $items->count(),
+                'last_page' => max(1, (int) ceil($items->count() / $perPage)),
+            ],
+        ];
     }
 
     public function category(Request $request, int $categoryId): View

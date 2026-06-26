@@ -208,9 +208,9 @@
                                     <a href="{{ route('products.show', $product['id']) }}" class="card-media hero-product-media">
                                         <span class="sale-chip">{{ $loop->first ? 'HOT' : 'NEW' }}</span>
                                         <span class="wish">♡</span>
-                                        <img class="primary" src="{{ $product['image'] }}" alt="{{ $product['name'] }}">
+                                        <img class="primary" src="{{ $product['image'] }}" alt="{{ $product['name'] }}" loading="lazy">
                                         @if(!empty($product['secondary_image']))
-                                            <img class="secondary" src="{{ $product['secondary_image'] }}" alt="{{ $product['name'] }}">
+                                            <img class="secondary" src="{{ $product['secondary_image'] }}" alt="{{ $product['name'] }}" loading="lazy">
                                         @endif
                                     </a>
                                     <div class="card-body">
@@ -284,9 +284,9 @@
                     <a href="{{ route('products.show', $product['id']) }}" class="card-media">
                         <span class="sale-chip">TOP</span>
                         <span class="wish">♡</span>
-                        <img class="primary" src="{{ $product['image'] }}" alt="{{ $product['name'] }}">
+                        <img class="primary" src="{{ $product['image'] }}" alt="{{ $product['name'] }}" loading="lazy">
                         @if(!empty($product['secondary_image']))
-                            <img class="secondary" src="{{ $product['secondary_image'] }}" alt="{{ $product['name'] }}">
+                            <img class="secondary" src="{{ $product['secondary_image'] }}" alt="{{ $product['name'] }}" loading="lazy">
                         @endif
                     </a>
                     <div class="card-body">
@@ -319,9 +319,9 @@
                         <a href="{{ route('products.show', $product['id']) }}" class="card-media">
                             <span class="sale-chip">NEW</span>
                             <span class="wish">♡</span>
-                            <img class="primary" src="{{ $product['image'] }}" alt="{{ $product['name'] }}">
+                            <img class="primary" src="{{ $product['image'] }}" alt="{{ $product['name'] }}" loading="lazy">
                             @if(!empty($product['secondary_image']))
-                                <img class="secondary" src="{{ $product['secondary_image'] }}" alt="{{ $product['name'] }}">
+                                <img class="secondary" src="{{ $product['secondary_image'] }}" alt="{{ $product['name'] }}" loading="lazy">
                             @endif
                         </a>
                         <div class="card-body">
@@ -346,9 +346,9 @@
                         <a href="{{ route('products.show', $product['id']) }}" class="card-media">
                             <span class="sale-chip">SALE</span>
                             <span class="wish">♡</span>
-                            <img class="primary" src="{{ $product['image'] }}" alt="{{ $product['name'] }}">
+                            <img class="primary" src="{{ $product['image'] }}" alt="{{ $product['name'] }}" loading="lazy">
                             @if(!empty($product['secondary_image']))
-                                <img class="secondary" src="{{ $product['secondary_image'] }}" alt="{{ $product['name'] }}">
+                                <img class="secondary" src="{{ $product['secondary_image'] }}" alt="{{ $product['name'] }}" loading="lazy">
                             @endif
                         </a>
                         <div class="card-body">
@@ -376,9 +376,9 @@
                         <a href="{{ route('products.show', $product['id']) }}" class="card-media">
                             <span class="sale-chip">TREND</span>
                             <span class="wish">♡</span>
-                            <img class="primary" src="{{ $product['image'] }}" alt="{{ $product['name'] }}">
+                            <img class="primary" src="{{ $product['image'] }}" alt="{{ $product['name'] }}" loading="lazy">
                             @if(!empty($product['secondary_image']))
-                                <img class="secondary" src="{{ $product['secondary_image'] }}" alt="{{ $product['name'] }}">
+                                <img class="secondary" src="{{ $product['secondary_image'] }}" alt="{{ $product['name'] }}" loading="lazy">
                             @endif
                         </a>
                         <div class="card-body">
@@ -403,9 +403,9 @@
                         <a href="{{ route('products.show', $product['id']) }}" class="card-media">
                             <span class="sale-chip">PREMIUM</span>
                             <span class="wish">♡</span>
-                            <img class="primary" src="{{ $product['image'] }}" alt="{{ $product['name'] }}">
+                            <img class="primary" src="{{ $product['image'] }}" alt="{{ $product['name'] }}" loading="lazy">
                             @if(!empty($product['secondary_image']))
-                                <img class="secondary" src="{{ $product['secondary_image'] }}" alt="{{ $product['name'] }}">
+                                <img class="secondary" src="{{ $product['secondary_image'] }}" alt="{{ $product['name'] }}" loading="lazy">
                             @endif
                         </a>
                         <div class="card-body">
@@ -418,55 +418,31 @@
             </div>
         </section>
 
-        <div class="wall-card">
+        <div
+            class="wall-card"
+            data-home-products
+            data-products-url="{{ route('home.products') }}"
+            data-initial-meta='@json($meta)'
+            data-filters='@json($filters)'
+        >
             <div class="wall-head">
                 <div>
                     <h2 class="wall-title">Todo el catálogo</h2>
                 </div>
             </div>
 
-            <div class="product-wall">
+            <div class="product-wall" data-home-product-grid>
                 @forelse($products as $product)
-                    <article class="card">
-                        <a href="{{ route('products.show', $product['id']) }}" class="card-media">
-                            <span class="sale-chip">HOT</span>
-                            <span class="wish">♡</span>
-                            <span class="stock-chip">Stock {{ $product['stock'] }}</span>
-                            <img class="primary" src="{{ $product['image'] }}" alt="{{ $product['name'] }}">
-                            @if(!empty($product['secondary_image']))
-                                <img class="secondary" src="{{ $product['secondary_image'] }}" alt="{{ $product['name'] }}">
-                            @endif
-                        </a>
-                        <div class="card-body">
-                            <div class="eyebrow">{{ $product['owner']['name'] }} · {{ $product['category_name'] ?? 'Catalogo' }}</div>
-                            <a href="{{ route('products.show', $product['id']) }}" class="title">{{ $product['name'] }}</a>
-                            <div class="price-row">
-                                <span class="price">${{ number_format($product['price'], 0, ',', '.') }}</span>
-                                <span class="old-price">${{ number_format($product['price'] * 1.18, 0, ',', '.') }}</span>
-                            </div>
-                            <div class="rating-row">
-                                <span>★ 4.8</span>
-                                <span>·</span>
-                                <span>SKU {{ $product['sku'] ?: 'N/A' }}</span>
-                            </div>
-                            <div class="card-actions">
-                                <a class="quick-link" href="{{ route('products.show', $product['id']) }}">Ver</a>
-                                <form method="post" action="{{ route('cart.add') }}">
-                                    @csrf
-                                    <input type="hidden" name="product_id" value="{{ $product['id'] }}">
-                                    <input type="hidden" name="quantity" value="1">
-                                    <button type="submit" class="add-btn">Agregar</button>
-                                </form>
-                            </div>
-                        </div>
-                    </article>
+                    @include('storefront.partials.product-card', ['product' => $product, 'chip' => 'HOT', 'showOldPrice' => true, 'withActions' => true, 'showMeta' => true])
                 @empty
-                    <div class="empty-state" style="grid-column:1 / -1;">
+                    <div class="empty-state" style="grid-column:1 / -1;" data-home-empty>
                         <strong>No hay productos para ese filtro.</strong>
                         <div class="mini">Prueba con otra categoria o limpia la busqueda.</div>
                     </div>
                 @endforelse
             </div>
+            <div class="mini" data-home-loading hidden style="text-align:center;margin-top:20px;">Cargando más productos...</div>
+            <div data-home-sentinel></div>
         </div>
 
         <section class="newsletter">
@@ -526,4 +502,45 @@
             </div>
         </footer>
     </section>
+    <script>
+        (() => {
+            const root = document.querySelector('[data-home-products]');
+            if (!root || !('IntersectionObserver' in window)) return;
+
+            const grid = root.querySelector('[data-home-product-grid]');
+            const sentinel = root.querySelector('[data-home-sentinel]');
+            const loading = root.querySelector('[data-home-loading]');
+            const filters = JSON.parse(root.dataset.filters || '{}');
+            let meta = JSON.parse(root.dataset.initialMeta || '{}');
+            let busy = false;
+
+            const loadNext = async () => {
+                const page = Number(meta.page || 1);
+                const lastPage = Number(meta.last_page || 1);
+                if (busy || page >= lastPage) return;
+
+                busy = true;
+                loading.hidden = false;
+
+                try {
+                    const params = new URLSearchParams({
+                        page: page + 1,
+                        q: filters.q || '',
+                        sort: filters.sort || 'newest',
+                    });
+                    const response = await fetch(`${root.dataset.productsUrl}?${params}`, { headers: { Accept: 'application/json' } });
+                    const payload = await response.json();
+                    meta = payload.meta || meta;
+                    grid.insertAdjacentHTML('beforeend', payload.html || '');
+                } finally {
+                    busy = false;
+                    loading.hidden = true;
+                }
+            };
+
+            new IntersectionObserver((entries) => {
+                if (entries.some((entry) => entry.isIntersecting)) loadNext();
+            }, { rootMargin: '600px' }).observe(sentinel);
+        })();
+    </script>
 @endsection
