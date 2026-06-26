@@ -45,7 +45,6 @@
             'Niños',
             'Hombre',
             'Conjuntos',
-            'Celulares y Accesorios',
             'Bolsas & Maletas',
             'Bottoms',
             'Joyería y Accesorios',
@@ -53,17 +52,10 @@
             'Bebé y Maternidad',
             'Ropa Interior y Pijamas',
             'Mezclilla',
-            'Belleza y salud',
-            'Automotriz',
             'Enterizos para mujer',
-            'Deportes & Exteriores',
             'Ropa de Playa',
-            'Hogar y Vida',
             'Vestidos',
             'Zapatos',
-            'Mascotas',
-            'Juguetes y Juegos',
-            'Útiles escolares y de oficina',
         ];
         $visualCategories = collect($categories)->keyBy('name');
         $categoryAliases = [

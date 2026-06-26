@@ -27,11 +27,27 @@ class ExampleTest extends TestCase
                 'views_count' => 10,
                 'created_at_ts' => now()->timestamp,
                 'type' => 'simple',
+            ], [
+                'id' => 2,
+                'name' => 'Soporte celular',
+                'sku' => 'SKU-2',
+                'price' => 39000,
+                'stock' => 5,
+                'image' => 'https://example.com/phone.jpg',
+                'secondary_image' => null,
+                'owner' => ['id' => 10, 'name' => 'Hub Demo'],
+                'categories' => [['id' => 3, 'name' => 'Tecnología']],
+                'category_name' => 'Tecnología',
+                'is_featured' => false,
+                'views_count' => 1,
+                'created_at_ts' => now()->timestamp,
+                'type' => 'simple',
             ]],
-            'meta' => ['page' => 1, 'per_page' => 24, 'total' => 1, 'last_page' => 1],
+            'meta' => ['page' => 1, 'per_page' => 24, 'total' => 2, 'last_page' => 1],
         ]);
         $mock->shouldReceive('categories')->once()->andReturn([
             ['id' => 2, 'name' => 'Moda'],
+            ['id' => 3, 'name' => 'Tecnología'],
         ]);
 
         $this->app->instance(HubMarketplaceApi::class, $mock);
@@ -41,7 +57,8 @@ class ExampleTest extends TestCase
         $response->assertOk()
             ->assertSee('M57')
             ->assertSee('Vestido prueba')
-            ->assertSee('Hub Demo');
+            ->assertSee('Hub Demo')
+            ->assertDontSee('Soporte celular');
     }
 
     public function test_product_page_renders_redesigned_pdp(): void

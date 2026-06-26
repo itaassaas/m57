@@ -26,6 +26,7 @@ class StorefrontController extends Controller
             return $this->category($request, $request->integer('category'));
         }
 
+        $categories = $this->hub->categories();
         $products = $this->hub->allProducts([
             'q' => $request->string('q')->toString(),
             'category' => $request->integer('category'),
@@ -33,9 +34,9 @@ class StorefrontController extends Controller
         ]);
 
         return view('storefront.index', [
-            'products' => $products['data'] ?? [],
+            'products' => $this->homeFashionProducts($products['data'] ?? []),
             'meta' => $products['meta'] ?? [],
-            'categories' => $this->hub->categories(),
+            'categories' => $categories,
             'cartCount' => $this->cartCount(),
             'filters' => [
                 'q' => $request->string('q')->toString(),
@@ -474,6 +475,53 @@ class StorefrontController extends Controller
         } catch (\Throwable $e) {
             return [];
         }
+    }
+
+    private function homeFashionProducts(array $products): array
+    {
+        $allowed = collect([
+            'Moda',
+            'Ropa',
+            'Ropa y Accesorios',
+            'Accesorios',
+            'Mujer',
+            'Curvy',
+            'Niños',
+            'Hombre',
+            'Conjuntos',
+            'Bolsas & Maletas',
+            'Bottoms',
+            'Joyería y Accesorios',
+            'Joyería',
+            'Tops',
+            'Bebé',
+            'Bebé y Maternidad',
+            'Ropa Interior y Pijamas',
+            'Mezclilla',
+            'Enterizos para mujer',
+            'Ropa de Playa',
+            'Vestidos',
+            'Zapatos',
+            'Calzado',
+        ])->map(fn (string $name) => $this->categoryKey($name))->all();
+
+        return collect($products)
+            ->filter(function (array $product) use ($allowed) {
+                $names = collect($product['categories'] ?? [])
+                    ->pluck('name')
+                    ->push($product['category_name'] ?? null)
+                    ->filter()
+                    ->map(fn (string $name) => $this->categoryKey($name));
+
+                return $names->intersect($allowed)->isNotEmpty();
+            })
+            ->values()
+            ->all();
+    }
+
+    private function categoryKey(string $name): string
+    {
+        return \Illuminate\Support\Str::of($name)->lower()->ascii()->replace('&', ' y ')->squish()->value();
     }
 
     private function productStatePayload(array $product, ?array $variation = null): array
