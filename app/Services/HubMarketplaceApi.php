@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use Illuminate\Http\Client\RequestException;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
 class HubMarketplaceApi
@@ -18,14 +20,30 @@ class HubMarketplaceApi
 
     public function allProducts(array $query = []): array
     {
-        $query['per_page'] = 48;
+        $cacheKey = 'm57:catalog:' . md5(json_encode($query));
+
+        return Cache::remember($cacheKey, now()->addMinutes(10), fn () => $this->fetchAllProducts($query));
+    }
+
+    private function fetchAllProducts(array $query = []): array
+    {
+        $query['per_page'] = 240;
+        $query['spread'] = 'owners';
         $items = collect();
         $meta = [];
 
-        for ($page = 1; $page <= 50; $page++) {
-            $response = $this->products(array_merge($query, ['page' => $page]));
-            $data = collect($response['data'] ?? []);
-            $meta = $response['meta'] ?? $meta;
+        for ($page = 1; $page <= 6; $page++) {
+            try {
+                $response = $this->products(array_merge($query, ['page' => $page]));
+                $data = collect($response['data'] ?? []);
+                $meta = $response['meta'] ?? $meta;
+            } catch (RequestException $exception) {
+                if ($items->isNotEmpty() && $exception->response?->status() === 429) {
+                    break;
+                }
+
+                throw $exception;
+            }
 
             if ($data->isEmpty()) {
                 break;
