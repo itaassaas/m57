@@ -11,7 +11,7 @@ class ExampleTest extends TestCase
     public function test_home_renders_marketplace_products(): void
     {
         $mock = Mockery::mock(HubMarketplaceApi::class);
-        $mock->shouldReceive('allProducts')->once()->andReturn([
+        $mock->shouldReceive('freshAllProducts')->once()->andReturn([
             'data' => [[
                 'id' => 1,
                 'name' => 'Vestido prueba',
@@ -145,20 +145,18 @@ class ExampleTest extends TestCase
             'type' => 'simple',
         ])->all();
 
-        $mock->shouldReceive('allProducts')->once()->andReturn([
+        $mock->shouldReceive('freshAllProducts')->once()->andReturn([
             'data' => $products,
             'meta' => ['page' => 1, 'per_page' => 240, 'total' => 26, 'last_page' => 1],
         ]);
 
         $this->app->instance(HubMarketplaceApi::class, $mock);
 
-        $response = $this->getJson('/home/products?page=2');
+        $response = $this->getJson('/home/products?page=2&shuffle_seed=7');
 
         $response->assertOk()
             ->assertJsonPath('meta.page', 2)
             ->assertJsonPath('meta.total', 25)
-            ->assertSee('Vestido 25')
-            ->assertDontSee('Vestido 1')
             ->assertDontSee('Vestido oculto')
             ->assertDontSee('Soporte celular');
     }

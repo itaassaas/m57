@@ -27,7 +27,8 @@ class StorefrontController extends Controller
         }
 
         $categories = $this->hub->categories();
-        $products = $this->paginatedHomeProducts($request);
+        $shuffleSeed = $request->integer('shuffle_seed') ?: random_int(1, 2147483647);
+        $products = $this->paginatedHomeProducts($request, $shuffleSeed);
 
         return view('storefront.index', [
             'products' => $products['data'],
@@ -38,13 +39,14 @@ class StorefrontController extends Controller
                 'q' => $request->string('q')->toString(),
                 'category' => $request->integer('category'),
                 'sort' => $request->string('sort')->toString() ?: 'newest',
+                'shuffle_seed' => $shuffleSeed,
             ],
         ]);
     }
 
     public function homeProducts(Request $request): JsonResponse
     {
-        $products = $this->paginatedHomeProducts($request);
+        $products = $this->paginatedHomeProducts($request, $request->integer('shuffle_seed') ?: random_int(1, 2147483647));
 
         return response()->json([
             'html' => view('storefront.partials.product-cards', [
@@ -58,14 +60,16 @@ class StorefrontController extends Controller
         ]);
     }
 
-    private function paginatedHomeProducts(Request $request): array
+    private function paginatedHomeProducts(Request $request, int $shuffleSeed): array
     {
-        $products = $this->hub->allProducts([
+        $products = $this->hub->freshAllProducts([
             'q' => $request->string('q')->toString(),
             'category' => $request->integer('category'),
             'sort' => $request->string('sort')->toString() ?: 'newest',
         ]);
-        $items = collect($this->homeFashionProducts($products['data'] ?? []))->values();
+        $items = collect($this->homeFashionProducts($products['data'] ?? []))
+            ->sortBy(fn (array $product) => crc32($shuffleSeed . ':' . ($product['id'] ?? '')))
+            ->values();
         $page = max(1, $request->integer('page', 1));
         $perPage = 24;
 

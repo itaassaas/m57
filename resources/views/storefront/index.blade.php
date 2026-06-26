@@ -527,6 +527,7 @@
                         page: page + 1,
                         q: filters.q || '',
                         sort: filters.sort || 'newest',
+                        shuffle_seed: filters.shuffle_seed || '',
                     });
                     const response = await fetch(`${root.dataset.productsUrl}?${params}`, { headers: { Accept: 'application/json' } });
                     const payload = await response.json();

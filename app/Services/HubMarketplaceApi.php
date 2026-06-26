@@ -25,6 +25,11 @@ class HubMarketplaceApi
         return Cache::remember($cacheKey, now()->addMinutes(10), fn () => $this->fetchAllProducts($query));
     }
 
+    public function freshAllProducts(array $query = []): array
+    {
+        return $this->fetchAllProducts($query);
+    }
+
     private function fetchAllProducts(array $query = []): array
     {
         $query['per_page'] = 240;
