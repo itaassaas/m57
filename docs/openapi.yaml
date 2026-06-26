@@ -1,0 +1,309 @@
+openapi: 3.0.3
+info:
+  title: Hub M57 Marketplace API
+  version: 0.1.0
+  description: >
+    API que Hub expone para el storefront M57. M57 consume estos endpoints
+    para mostrar catalogo publico y crear ordenes separadas por tienda duena.
+servers:
+  - url: http://127.0.0.1:8000
+    description: Hub local
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Token
+  schemas:
+    Owner:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+    ProductCard:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        sku:
+          type: string
+          nullable: true
+        price:
+          type: number
+          format: float
+        stock:
+          type: integer
+        image:
+          type: string
+          nullable: true
+        secondary_image:
+          type: string
+          nullable: true
+        owner:
+          $ref: '#/components/schemas/Owner'
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+        category_name:
+          type: string
+          nullable: true
+        is_featured:
+          type: boolean
+        views_count:
+          type: integer
+        created_at_ts:
+          type: integer
+        type:
+          type: string
+          enum: [simple, variable]
+    ProductVariation:
+      type: object
+      properties:
+        id:
+          type: integer
+        sku:
+          type: string
+          nullable: true
+        name:
+          type: string
+        attributes:
+          type: object
+          additionalProperties: true
+        price:
+          type: number
+          format: float
+        stock:
+          type: integer
+        image:
+          type: string
+          nullable: true
+    ProductDetail:
+      allOf:
+        - $ref: '#/components/schemas/ProductCard'
+        - type: object
+          properties:
+            description:
+              type: string
+            images:
+              type: array
+              items:
+                type: string
+            variations:
+              type: array
+              items:
+                $ref: '#/components/schemas/ProductVariation'
+    CheckoutItem:
+      type: object
+      required: [product_id, quantity]
+      properties:
+        product_id:
+          type: integer
+        variation_id:
+          type: integer
+          nullable: true
+        quantity:
+          type: integer
+          minimum: 1
+    CheckoutCustomer:
+      type: object
+      required: [name, phone, address, city, state]
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          nullable: true
+        phone:
+          type: string
+        address:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        locality:
+          type: string
+          nullable: true
+    CheckoutRequest:
+      type: object
+      required: [customer, payment_type, items]
+      properties:
+        customer:
+          $ref: '#/components/schemas/CheckoutCustomer'
+        payment_type:
+          type: string
+          enum: [cod, anticipado, anticipado_parcial]
+        payment_channel:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CheckoutItem'
+    StoreOrder:
+      type: object
+      properties:
+        owner_id:
+          type: integer
+        owner_name:
+          type: string
+        order_id:
+          type: integer
+        order_number:
+          type: string
+        status:
+          type: string
+        subtotal:
+          type: number
+          format: float
+        total:
+          type: number
+          format: float
+paths:
+  /api/m57/catalog/categories:
+    get:
+      summary: Listar categorias visibles
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Category'
+  /api/m57/catalog/products:
+    get:
+      summary: Listar productos publicos del marketplace
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+        - in: query
+          name: category
+          schema:
+            type: integer
+        - in: query
+          name: sort
+          schema:
+            type: string
+            enum: [newest, price_asc, price_desc, best_selling]
+        - in: query
+          name: page
+          schema:
+            type: integer
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProductCard'
+                  meta:
+                    type: object
+  /api/m57/catalog/products/{productId}:
+    get:
+      summary: Obtener detalle de producto
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: productId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ProductDetail'
+        '404':
+          description: No encontrado
+  /api/m57/checkout:
+    post:
+      summary: Crear ordenes separadas por tienda en Hub
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckoutRequest'
+      responses:
+        '201':
+          description: Ordenes creadas
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      batch_code:
+                        type: string
+                      total_orders:
+                        type: integer
+                      grand_total:
+                        type: number
+                        format: float
+                      orders:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/StoreOrder'
+        '422':
+          description: Validacion o stock invalido
+  /api/m57/orders/{orderNumber}:
+    get:
+      summary: Consultar estado de una orden creada por M57
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: orderNumber
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '404':
+          description: No encontrada
