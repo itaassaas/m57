@@ -524,6 +524,7 @@ class StorefrontController extends Controller
             'Hombre',
             'Conjuntos',
             'Bolsas & Maletas',
+            'Bolsos',
             'Bottoms',
             'Joyería y Accesorios',
             'Joyería',
@@ -541,6 +542,10 @@ class StorefrontController extends Controller
 
         return collect($products)
             ->filter(function (array $product) use ($allowed) {
+                if (in_array($product['is_visible_in_catalog'] ?? true, [false, 0, '0'], true)) {
+                    return false;
+                }
+
                 $names = collect($product['categories'] ?? [])
                     ->pluck('name')
                     ->push($product['category_name'] ?? null)

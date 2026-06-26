@@ -24,6 +24,7 @@ class ExampleTest extends TestCase
                 'categories' => [['id' => 2, 'name' => 'Moda']],
                 'category_name' => 'Moda',
                 'is_featured' => true,
+                'is_visible_in_catalog' => true,
                 'views_count' => 10,
                 'created_at_ts' => now()->timestamp,
                 'type' => 'simple',
@@ -39,15 +40,49 @@ class ExampleTest extends TestCase
                 'categories' => [['id' => 3, 'name' => 'Tecnología']],
                 'category_name' => 'Tecnología',
                 'is_featured' => false,
+                'is_visible_in_catalog' => true,
                 'views_count' => 1,
                 'created_at_ts' => now()->timestamp,
                 'type' => 'simple',
+            ], [
+                'id' => 3,
+                'name' => 'Bolso visual',
+                'sku' => 'SKU-3',
+                'price' => 79000,
+                'stock' => 5,
+                'image' => 'https://example.com/bag.jpg',
+                'secondary_image' => null,
+                'owner' => ['id' => 10, 'name' => 'Hub Demo'],
+                'categories' => [['id' => 4, 'name' => 'Bolsas & Maletas']],
+                'category_name' => 'Bolsas & Maletas',
+                'is_featured' => false,
+                'is_visible_in_catalog' => true,
+                'views_count' => 3,
+                'created_at_ts' => now()->timestamp,
+                'type' => 'simple',
+            ], [
+                'id' => 4,
+                'name' => 'Vestido oculto',
+                'sku' => 'SKU-4',
+                'price' => 89000,
+                'stock' => 5,
+                'image' => 'https://example.com/hidden.jpg',
+                'secondary_image' => null,
+                'owner' => ['id' => 10, 'name' => 'Hub Demo'],
+                'categories' => [['id' => 2, 'name' => 'Moda']],
+                'category_name' => 'Moda',
+                'is_featured' => false,
+                'is_visible_in_catalog' => false,
+                'views_count' => 2,
+                'created_at_ts' => now()->timestamp,
+                'type' => 'simple',
             ]],
-            'meta' => ['page' => 1, 'per_page' => 24, 'total' => 2, 'last_page' => 1],
+            'meta' => ['page' => 1, 'per_page' => 24, 'total' => 4, 'last_page' => 1],
         ]);
         $mock->shouldReceive('categories')->once()->andReturn([
             ['id' => 2, 'name' => 'Moda'],
             ['id' => 3, 'name' => 'Tecnología'],
+            ['id' => 4, 'name' => 'Bolsas & Maletas'],
         ]);
 
         $this->app->instance(HubMarketplaceApi::class, $mock);
@@ -57,7 +92,9 @@ class ExampleTest extends TestCase
         $response->assertOk()
             ->assertSee('M57')
             ->assertSee('Vestido prueba')
+            ->assertSee('Bolso visual')
             ->assertSee('Hub Demo')
+            ->assertDontSee('Vestido oculto')
             ->assertDontSee('Soporte celular');
     }
 
@@ -76,6 +113,7 @@ class ExampleTest extends TestCase
             'categories' => [['id' => 2, 'name' => 'Moda']],
             'category_name' => 'Moda',
             'is_featured' => true,
+            'is_visible_in_catalog' => true,
             'type' => 'simple',
         ])->push([
             'id' => 26,
@@ -89,6 +127,21 @@ class ExampleTest extends TestCase
             'categories' => [['id' => 3, 'name' => 'Tecnología']],
             'category_name' => 'Tecnología',
             'is_featured' => false,
+            'is_visible_in_catalog' => true,
+            'type' => 'simple',
+        ])->push([
+            'id' => 27,
+            'name' => 'Vestido oculto',
+            'sku' => 'SKU-27',
+            'price' => 99000,
+            'stock' => 5,
+            'image' => 'https://example.com/hidden.jpg',
+            'secondary_image' => null,
+            'owner' => ['id' => 10, 'name' => 'Hub Demo'],
+            'categories' => [['id' => 2, 'name' => 'Moda']],
+            'category_name' => 'Moda',
+            'is_featured' => false,
+            'is_visible_in_catalog' => false,
             'type' => 'simple',
         ])->all();
 
@@ -106,6 +159,7 @@ class ExampleTest extends TestCase
             ->assertJsonPath('meta.total', 25)
             ->assertSee('Vestido 25')
             ->assertDontSee('Vestido 1')
+            ->assertDontSee('Vestido oculto')
             ->assertDontSee('Soporte celular');
     }
 
