@@ -11,7 +11,7 @@ class ExampleTest extends TestCase
     public function test_home_renders_marketplace_products(): void
     {
         $mock = Mockery::mock(HubMarketplaceApi::class);
-        $mock->shouldReceive('products')->once()->andReturn([
+        $mock->shouldReceive('allProducts')->once()->andReturn([
             'data' => [[
                 'id' => 1,
                 'name' => 'Vestido prueba',

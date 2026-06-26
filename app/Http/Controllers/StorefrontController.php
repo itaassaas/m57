@@ -26,11 +26,10 @@ class StorefrontController extends Controller
             return $this->category($request, $request->integer('category'));
         }
 
-        $products = $this->hub->products([
+        $products = $this->hub->allProducts([
             'q' => $request->string('q')->toString(),
             'category' => $request->integer('category'),
             'sort' => $request->string('sort')->toString() ?: 'newest',
-            'page' => $request->integer('page', 1),
         ]);
 
         return view('storefront.index', [
