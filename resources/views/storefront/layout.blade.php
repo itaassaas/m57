@@ -663,7 +663,7 @@
         .category-showcase {
             display: grid;
             grid-auto-flow: column;
-            grid-template-rows: repeat(3, minmax(0, 1fr));
+            grid-template-rows: repeat(2, minmax(0, 1fr));
             grid-auto-columns: calc((100% - 112px) / 8);
             gap: 16px;
             margin-bottom: 28px;
