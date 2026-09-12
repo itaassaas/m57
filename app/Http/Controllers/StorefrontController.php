@@ -62,24 +62,29 @@ class StorefrontController extends Controller
 
     private function paginatedHomeProducts(Request $request, int $shuffleSeed): array
     {
-        $products = $this->hub->allProducts([
+        $page = max(1, $request->integer('page', 1));
+        $perPage = 24;
+        $source = $this->hub->products([
             'q' => $request->string('q')->toString(),
             'category' => $request->integer('category'),
             'sort' => $request->string('sort')->toString() ?: 'newest',
+            'page' => $page,
+            'per_page' => 72,
+            'spread' => 'owners',
         ]);
-        $items = collect($this->homeFashionProducts($products['data'] ?? []))
+        $items = collect($this->homeFashionProducts($source['data'] ?? []))
             ->sortBy(fn (array $product) => crc32($shuffleSeed.':'.($product['id'] ?? '')))
+            ->take($perPage)
             ->values();
-        $page = max(1, $request->integer('page', 1));
-        $perPage = 24;
+        $meta = $source['meta'] ?? [];
 
         return [
-            'data' => $items->forPage($page, $perPage)->values()->all(),
+            'data' => $items->all(),
             'meta' => [
                 'page' => $page,
                 'per_page' => $perPage,
-                'total' => $items->count(),
-                'last_page' => max(1, (int) ceil($items->count() / $perPage)),
+                'total' => (int) ($meta['total'] ?? $items->count()),
+                'last_page' => max($page, (int) ($meta['last_page'] ?? $page)),
             ],
         ];
     }

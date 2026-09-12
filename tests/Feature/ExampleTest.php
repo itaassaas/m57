@@ -11,7 +11,11 @@ class ExampleTest extends TestCase
     public function test_home_renders_marketplace_products(): void
     {
         $mock = Mockery::mock(HubMarketplaceApi::class);
-        $mock->shouldReceive('allProducts')->once()->andReturn([
+        $mock->shouldReceive('products')->once()->with(Mockery::on(fn (array $query) => (
+            ($query['page'] ?? null) === 1
+            && ($query['per_page'] ?? null) === 72
+            && ($query['spread'] ?? null) === 'owners'
+        )))->andReturn([
             'data' => [[
                 'id' => 1,
                 'name' => 'Vestido prueba',
@@ -145,9 +149,13 @@ class ExampleTest extends TestCase
             'type' => 'simple',
         ])->all();
 
-        $mock->shouldReceive('allProducts')->once()->andReturn([
+        $mock->shouldReceive('products')->once()->with(Mockery::on(fn (array $query) => (
+            ($query['page'] ?? null) === 2
+            && ($query['per_page'] ?? null) === 72
+            && ($query['spread'] ?? null) === 'owners'
+        )))->andReturn([
             'data' => $products,
-            'meta' => ['page' => 1, 'per_page' => 240, 'total' => 26, 'last_page' => 1],
+            'meta' => ['page' => 2, 'per_page' => 72, 'total' => 27, 'last_page' => 3],
         ]);
 
         $this->app->instance(HubMarketplaceApi::class, $mock);
@@ -156,7 +164,7 @@ class ExampleTest extends TestCase
 
         $response->assertOk()
             ->assertJsonPath('meta.page', 2)
-            ->assertJsonPath('meta.total', 25)
+            ->assertJsonPath('meta.total', 27)
             ->assertDontSee('Vestido oculto')
             ->assertDontSee('Soporte celular');
     }

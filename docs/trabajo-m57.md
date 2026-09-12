@@ -39,6 +39,7 @@ En `m57`:
 - `fbddbc0` - `Improve storefront loading performance`
 - `b49ca0b` - `Improve mobile responsive storefront layout`
 - `8f49cb9` - `Reduce initial storefront image requests`
+- Pendiente de registrar: cambio para que la home cargue productos con una consulta paginada liviana en vez de esperar el catalogo completo.
 
 En `flumedrop1`:
 
@@ -129,6 +130,20 @@ Aunque los commits ya estan en GitHub, `https://m57.shop/` todavia servia HTML v
 - imagenes directas desde `app.mihub.com.co`: `77`
 
 Eso indica que falta actualizar el servidor o limpiar cache de Laravel.
+
+El document de la home tambien se midio en frio con `Cache-Control: no-cache` y llego a `TTFB ~26.6s`. Eso confirmo que el bloqueo principal no era DNS, TLS ni descarga del HTML, sino trabajo de backend antes del primer byte.
+
+Causa identificada:
+
+- La home estaba usando `allProducts()`.
+- `allProducts()` puede recorrer hasta 6 paginas de 240 productos desde Hub.
+- En cache frio, la primera visita quedaba esperando esas llamadas seriales antes de recibir HTML.
+
+Correccion aplicada despues:
+
+- La home paso a usar `products()` con `page`, `per_page=72` y `spread=owners`.
+- El HTML inicial ya no necesita construir el catalogo completo.
+- El infinite scroll pide la siguiente pagina al endpoint `/home/products`.
 
 Si el server apunta directo al repo `m57`:
 
