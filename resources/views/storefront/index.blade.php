@@ -66,7 +66,8 @@
             'Vestidos',
             'Zapatos',
         ];
-        $visualCategories = collect($categories)->keyBy('name');
+        $availableCategories = collect($categories)->values();
+        $visualCategories = $availableCategories->keyBy('name');
         $categoryAliases = [
             'mujer' => 'Moda',
             'hombre' => 'Moda',
@@ -102,7 +103,7 @@
             'solo para ti' => 'Moda',
             'joyeria' => 'Ropa y Accesorios',
         ];
-        $resolveCategory = function (string $name) use ($visualCategories, $categoryAliases) {
+        $resolveCategory = function (string $name, ?int $fallbackIndex = null) use ($availableCategories, $visualCategories, $categoryAliases) {
             $normalize = static fn (string $value) => \Illuminate\Support\Str::of($value)->lower()->ascii()->replace('&', ' y ')->squish()->value();
 
             if ($category = $visualCategories->get($name)) {
@@ -115,9 +116,19 @@
                 return $category;
             }
 
-            return collect($visualCategories->all())->first(function ($category) use ($normalized, $normalize) {
+            $matched = collect($visualCategories->all())->first(function ($category) use ($normalized, $normalize) {
                 return $normalize((string) ($category['name'] ?? '')) === $normalized;
             });
+
+            if ($matched) {
+                return $matched;
+            }
+
+            if ($fallbackIndex !== null && $availableCategories->isNotEmpty()) {
+                return $availableCategories->get($fallbackIndex % $availableCategories->count());
+            }
+
+            return $availableCategories->first();
         };
         $visualCategoryImages = [
             'Mujer' => asset('storage/categorias-visual/Mujer.png'),
@@ -156,9 +167,9 @@
                             <div class="mega-title">{{ $column['title'] }}</div>
                             @foreach($column['links'] as [$label, $targetCategory])
                                 @php
-                                    $linkedCategory = $resolveCategory($targetCategory);
+                                    $linkedCategory = $resolveCategory($targetCategory, $loop->parent->index + $loop->index);
                                 @endphp
-                                <a href="{{ $linkedCategory ? route('categories.show', $linkedCategory['id']) : '#catalogo' }}" class="mega-link">{{ $label }}</a>
+                                <a href="{{ $linkedCategory ? route('categories.show', $linkedCategory['id']) : route('home') }}" class="mega-link">{{ $label }}</a>
                             @endforeach
                         </div>
                     @endforeach
@@ -271,9 +282,9 @@
         <div class="category-showcase">
             @foreach($visualCategoryNames as $categoryName)
                 @php
-                    $category = $resolveCategory($categoryName);
+                    $category = $resolveCategory($categoryName, $loop->index);
                 @endphp
-                <a href="{{ $category ? route('categories.show', ['categoryId' => $category['id'], 'q' => $filters['q'], 'sort' => $filters['sort']]) : '#catalogo' }}" class="category-tile">
+                <a href="{{ $category ? route('categories.show', ['categoryId' => $category['id'], 'q' => $filters['q'], 'sort' => $filters['sort']]) : route('home') }}" class="category-tile">
                     <img
                         class="category-icon"
                         src="{{ $visualCategoryImages[$categoryName] ?? asset('storage/logo.png') }}"
@@ -475,16 +486,20 @@
 
         <footer class="site-footer">
             @php
-                $footerCategories = collect($categories)->keyBy('name');
+                $footerLinks = [
+                    ['Mujer', $resolveCategory('Mujer', 0)],
+                    ['Hombre', $resolveCategory('Hombre', 1)],
+                    ['Calzado', $resolveCategory('Zapatos', 2)],
+                    ['Accesorios', $resolveCategory('Bolsas & Maletas', 3)],
+                ];
             @endphp
             <div class="footer-grid">
                 <div>
                     <p class="footer-title">Comprar</p>
                     <div class="footer-list">
-                        <a href="{{ ($footerCategories->get('Mujer')) ? route('categories.show', $footerCategories->get('Mujer')['id']) : '#catalogo' }}">Mujer</a>
-                        <a href="{{ ($footerCategories->get('Hombre')) ? route('categories.show', $footerCategories->get('Hombre')['id']) : '#catalogo' }}">Hombre</a>
-                        <a href="{{ ($footerCategories->get('Zapatos')) ? route('categories.show', $footerCategories->get('Zapatos')['id']) : '#catalogo' }}">Calzado</a>
-                        <a href="{{ ($footerCategories->get('Bolsas & Maletas')) ? route('categories.show', $footerCategories->get('Bolsas & Maletas')['id']) : '#catalogo' }}">Accesorios</a>
+                        @foreach($footerLinks as [$label, $category])
+                            <a href="{{ $category ? route('categories.show', $category['id']) : route('home') }}">{{ $label }}</a>
+                        @endforeach
                     </div>
                 </div>
                 <div>
