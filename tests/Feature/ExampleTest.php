@@ -11,6 +11,7 @@ class ExampleTest extends TestCase
     public function test_home_renders_marketplace_products(): void
     {
         $mock = Mockery::mock(HubMarketplaceApi::class);
+        $mock->shouldReceive('trackEvent')->byDefault();
         $mock->shouldReceive('storefrontHome')->once()->andReturn([]);
         $mock->shouldReceive('storefrontConfig')->once()->andReturn([]);
         $mock->shouldReceive('products')->once()->with(Mockery::on(fn (array $query) => (
@@ -174,6 +175,7 @@ class ExampleTest extends TestCase
     public function test_product_page_renders_redesigned_pdp(): void
     {
         $mock = Mockery::mock(HubMarketplaceApi::class);
+        $mock->shouldReceive('trackEvent')->byDefault();
         $mock->shouldReceive('product')->once()->with(1917)->andReturn($this->fakeVariableProduct());
         $mock->shouldReceive('products')->once()->andReturn([
             'data' => [[

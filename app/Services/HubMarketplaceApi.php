@@ -115,6 +115,18 @@ class HubMarketplaceApi
         return $this->client()->post('/api/m57/checkout', $payload)->throw()->json('data') ?? [];
     }
 
+    public function trackEvent(string $eventType, array $payload = []): void
+    {
+        try {
+            $this->client()->post('/api/m57/analytics', array_merge($payload, [
+                'event_type' => $eventType,
+                'session_id' => session()->getId(),
+            ]));
+        } catch (\Throwable) {
+            // Analytics must never break the storefront.
+        }
+    }
+
     public function departments(): array
     {
         return Cache::remember('m57:departments', now()->addDay(), fn () => (

@@ -4,13 +4,19 @@
     @php
         $allProducts = collect($products)->values();
         $storefrontConfig = $storefrontConfig ?? [];
+        $storefrontSections = collect($storefrontSections ?? [])->keyBy('code');
+        $sectionItems = fn (string $code, $fallback) => collect(data_get($storefrontSections->get($code), 'items', []))
+            ->filter(fn ($item) => isset($item['id']))
+            ->values()
+            ->whenEmpty(fn () => collect($fallback))
+            ->take(5);
         $heroConfig = data_get($storefrontConfig, 'hero', []);
         $brandConfig = data_get($storefrontConfig, 'brand', []);
-        $featured = $allProducts->take(5);
-        $newCollection = $allProducts->slice(5, 5);
-        $flashSale = $allProducts->slice(10, 5);
-        $trending = $allProducts->slice(15, 5);
-        $premium = $allProducts->slice(20, 5);
+        $featured = $sectionItems('featured_products', $allProducts->take(5));
+        $newCollection = $sectionItems('new_collection', $allProducts->slice(5, 5));
+        $flashSale = $sectionItems('flash_sale', $allProducts->slice(10, 5));
+        $trending = $sectionItems('trending', $allProducts->slice(15, 5));
+        $premium = $sectionItems('premium', $allProducts->slice(20, 5));
         $megaFeatured = $allProducts->take(3);
         $heroSlides = [
             [
@@ -552,6 +558,56 @@
             new IntersectionObserver((entries) => {
                 if (entries.some((entry) => entry.isIntersecting)) loadNext();
             }, { rootMargin: '600px' }).observe(sentinel);
+        })();
+
+        (() => {
+            const endpoint = @json(route('analytics.track'));
+            const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+            const send = (eventType, payload = {}) => {
+                const body = JSON.stringify({ event_type: eventType, ...payload });
+
+                fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': token,
+                        Accept: 'application/json',
+                    },
+                    body,
+                    keepalive: true,
+                }).catch(() => {});
+            };
+
+            document.addEventListener('click', (event) => {
+                const link = event.target.closest('a[href*="/products/"]');
+                if (!link) return;
+
+                const card = link.closest('[data-product-id]');
+                const match = link.href.match(/\/products\/(\d+)/);
+                const productId = Number(card?.dataset.productId || match?.[1] || 0);
+
+                if (productId > 0) {
+                    send('product_click', {
+                        product_id: productId,
+                        owner_user_id: Number(card?.dataset.ownerId || 0) || null,
+                        meta: { source: 'home' },
+                    });
+                }
+            });
+
+            document.addEventListener('submit', (event) => {
+                const form = event.target.closest('form[action="{{ route('cart.add') }}"]');
+                if (!form) return;
+
+                const productId = Number(form.querySelector('[name="product_id"]')?.value || 0);
+                if (productId > 0) {
+                    send('cart_intent', {
+                        product_id: productId,
+                        meta: { source: 'home' },
+                    });
+                }
+            }, true);
         })();
     </script>
 @endsection

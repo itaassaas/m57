@@ -1,5 +1,5 @@
-<article class="card {{ $cardClass ?? '' }}" @if(!empty($product['colors'])) data-colors="{{ implode('|', $product['colors']) }}" @endif @if(!empty($product['sizes'])) data-sizes="{{ implode('|', $product['sizes']) }}" @endif data-brand="{{ $product['owner']['name'] ?? 'Hub' }}" data-price="{{ $product['price'] }}" data-sale="{{ !empty($product['is_featured']) ? 1 : 0 }}">
-    <a href="{{ route('products.show', $product['id']) }}" class="card-media">
+<article class="card {{ $cardClass ?? '' }}" @if(!empty($product['colors'])) data-colors="{{ implode('|', $product['colors']) }}" @endif @if(!empty($product['sizes'])) data-sizes="{{ implode('|', $product['sizes']) }}" @endif data-brand="{{ $product['owner']['name'] ?? 'Hub' }}" data-price="{{ $product['price'] }}" data-sale="{{ !empty($product['is_featured']) ? 1 : 0 }}" data-product-id="{{ $product['id'] }}" data-owner-id="{{ data_get($product, 'owner.id') }}">
+    <a href="{{ route('products.show', $product['id']) }}" class="card-media" data-product-link>
         @if(!empty($chip))
             <span class="sale-chip">{{ $chip }}</span>
         @endif
@@ -15,7 +15,7 @@
         @else
             <div class="eyebrow">{{ $product['owner']['name'] ?? 'Hub' }}</div>
         @endif
-        <a href="{{ route('products.show', $product['id']) }}" class="title">{{ $product['name'] }}</a>
+        <a href="{{ route('products.show', $product['id']) }}" class="title" data-product-link>{{ $product['name'] }}</a>
         <div class="price-row">
             <span class="price">${{ number_format($product['price'], 0, ',', '.') }}</span>
             @if(!empty($showOldPrice))
@@ -31,7 +31,7 @@
                 </div>
             @endif
             <div class="card-actions">
-                <a class="quick-link" href="{{ route('products.show', $product['id']) }}">Ver</a>
+                <a class="quick-link" href="{{ route('products.show', $product['id']) }}" data-product-link>Ver</a>
                 <form method="post" action="{{ route('cart.add') }}">
                     @csrf
                     <input type="hidden" name="product_id" value="{{ $product['id'] }}">

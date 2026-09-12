@@ -10,6 +10,7 @@ Route::get('/categories/{categoryId}', [StorefrontController::class, 'category']
 Route::get('/categories/{categoryId}/products', [StorefrontController::class, 'categoryProducts'])->name('categories.products');
 Route::get('/products/{productId}', [StorefrontController::class, 'show'])->name('products.show');
 Route::get('/products/{productId}/state', [StorefrontController::class, 'productState'])->name('products.state');
+Route::post('/analytics', [StorefrontController::class, 'analytics'])->name('analytics.track');
 Route::get('/cart', [StorefrontController::class, 'cart'])->name('cart.show');
 Route::post('/cart', [StorefrontController::class, 'addToCart'])->name('cart.add');
 Route::patch('/cart/{itemKey}', [StorefrontController::class, 'updateCart'])->name('cart.update');

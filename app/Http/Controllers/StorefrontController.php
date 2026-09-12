@@ -32,6 +32,12 @@ class StorefrontController extends Controller
         $products = $storefront
             ? $this->productsFromStorefront($storefront)
             : $this->paginatedHomeProducts($request, $shuffleSeed);
+        $this->hub->trackEvent('home_view', [
+            'meta' => [
+                'has_storefront_config' => (bool) $storefront,
+                'page' => max(1, $request->integer('page', 1)),
+            ],
+        ]);
 
         return view('storefront.index', [
             'products' => $products['data'],
@@ -179,6 +185,10 @@ class StorefrontController extends Controller
     public function show(int $productId): View
     {
         $product = $this->hub->product($productId);
+        $this->hub->trackEvent('product_view', [
+            'product_id' => (int) ($product['id'] ?? $productId),
+            'owner_user_id' => (int) data_get($product, 'owner.id', 0),
+        ]);
 
         return view('storefront.product', [
             'product' => $product,
@@ -202,6 +212,20 @@ class StorefrontController extends Controller
         return response()->json([
             'data' => $this->productStatePayload($product, $variation),
         ]);
+    }
+
+    public function analytics(Request $request): JsonResponse
+    {
+        $payload = $request->validate([
+            'event_type' => 'required|string|max:60',
+            'product_id' => 'nullable|integer|min:1',
+            'owner_user_id' => 'nullable|integer|min:1',
+            'meta' => 'nullable|array',
+        ]);
+
+        $this->hub->trackEvent($payload['event_type'], collect($payload)->except('event_type')->all());
+
+        return response()->json(['ok' => true]);
     }
 
     public function cart(): View
@@ -249,6 +273,15 @@ class StorefrontController extends Controller
         ];
 
         session(['cart' => $cart]);
+        $this->hub->trackEvent('cart_add', [
+            'product_id' => (int) $product['id'],
+            'owner_user_id' => (int) data_get($product, 'owner.id', 0),
+            'meta' => [
+                'variation_id' => $variationId,
+                'quantity' => (int) $data['quantity'],
+                'buy_now' => $request->boolean('buy_now'),
+            ],
+        ]);
 
         if ($request->boolean('buy_now')) {
             return redirect()->route('checkout.show');
@@ -502,6 +535,18 @@ class StorefrontController extends Controller
 
             return $order;
         });
+
+        foreach ($cartItems as $item) {
+            $this->hub->trackEvent('purchase_item', [
+                'product_id' => (int) $item['product_id'],
+                'owner_user_id' => (int) $item['owner_id'],
+                'meta' => [
+                    'quantity' => (int) $item['quantity'],
+                    'line_total' => round($item['price'] * $item['quantity'], 2),
+                    'batch_code' => $response['batch_code'] ?? null,
+                ],
+            ]);
+        }
 
         session()->forget('cart');
 

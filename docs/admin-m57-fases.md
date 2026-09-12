@@ -2,19 +2,26 @@
 
 ## Estado 2026-09-12
 
-Se implemento una primera version funcional de todas las fases base:
+Se implemento la version completa inicial de las 7 fases:
 
 - Hub ahora tiene tablas para configuracion editorial, secciones, items, visibilidad de tiendas, visibilidad de productos, snapshots de publicacion y eventos analiticos.
 - Hub expone:
   - `GET /api/m57/storefront/config`
   - `GET /api/m57/storefront/home`
+- `GET /api/m57/storefront/sections`
+- `GET /api/m57/storefront/sections/{code}`
+- `POST /api/m57/analytics`
 - Hub mantiene compatibilidad con el catalogo actual: si las tablas nuevas no existen o no hay secciones, M57 sigue mostrando productos con las reglas anteriores.
 - La API de catalogo ya respeta ocultamiento por producto y por tienda cuando exista configuracion del admin.
 - Superadmin tiene una pantalla inicial en:
   - `/superadmin/erp/m57`
-- Desde esa pantalla se puede editar marca/hero, tiendas visibles/destacadas, productos visibles/destacados, secciones manuales y publicar snapshot.
+- Desde esa pantalla se puede editar marca/hero, tiendas visibles/destacadas, productos visibles/destacados, secciones manuales, secciones automaticas por regla, publicar snapshot y restaurar publicaciones anteriores.
+- Las reglas automaticas soportadas son: destacados, nuevos, mas vistos, mejor desempeno, stock alto, precio menor y precio mayor, con filtros por categoria/tienda.
 - M57 consume `storefront/home` para la portada cuando no hay filtros activos, y usa fallback automatico al listado anterior.
-- El hero de M57 ya puede leer titulo/subtitulo configurados desde Hub.
+- Los bloques principales de M57 (`featured_products`, `new_collection`, `flash_sale`, `trending`, `premium`) toman productos de las secciones publicadas en Hub.
+- El hero de M57 ya lee titulo/subtitulo configurados desde Hub.
+- M57 registra eventos de home, vistas de producto, clicks, intentos de carrito, agregados al carrito y compra por item.
+- El admin muestra un resumen de eventos, producto con mas interaccion y snapshots recientes.
 
 Validaciones locales:
 
