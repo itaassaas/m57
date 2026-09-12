@@ -11,6 +11,8 @@ class ExampleTest extends TestCase
     public function test_home_renders_marketplace_products(): void
     {
         $mock = Mockery::mock(HubMarketplaceApi::class);
+        $mock->shouldReceive('storefrontHome')->once()->andReturn([]);
+        $mock->shouldReceive('storefrontConfig')->once()->andReturn([]);
         $mock->shouldReceive('products')->once()->with(Mockery::on(fn (array $query) => (
             ($query['page'] ?? null) === 1
             && ($query['per_page'] ?? null) === 72

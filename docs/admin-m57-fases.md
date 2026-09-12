@@ -1,5 +1,40 @@
 # Administrador M57 por fases
 
+## Estado 2026-09-12
+
+Se implemento una primera version funcional de todas las fases base:
+
+- Hub ahora tiene tablas para configuracion editorial, secciones, items, visibilidad de tiendas, visibilidad de productos, snapshots de publicacion y eventos analiticos.
+- Hub expone:
+  - `GET /api/m57/storefront/config`
+  - `GET /api/m57/storefront/home`
+- Hub mantiene compatibilidad con el catalogo actual: si las tablas nuevas no existen o no hay secciones, M57 sigue mostrando productos con las reglas anteriores.
+- La API de catalogo ya respeta ocultamiento por producto y por tienda cuando exista configuracion del admin.
+- Superadmin tiene una pantalla inicial en:
+  - `/superadmin/erp/m57`
+- Desde esa pantalla se puede editar marca/hero, tiendas visibles/destacadas, productos visibles/destacados, secciones manuales y publicar snapshot.
+- M57 consume `storefront/home` para la portada cuando no hay filtros activos, y usa fallback automatico al listado anterior.
+- El hero de M57 ya puede leer titulo/subtitulo configurados desde Hub.
+
+Validaciones locales:
+
+- Hub: `php -l` en archivos nuevos/modificados OK.
+- Hub: `php artisan route:list --path=m57` OK.
+- Hub: `php artisan view:cache` OK y luego `php artisan view:clear`.
+- Hub: `php artisan migrate --pretend` no corrio porque MySQL local rechazo conexion.
+- M57: `php artisan test` OK, 10 tests, 50 assertions.
+
+Pendiente para servidor:
+
+```bash
+cd /ruta/de/flumedrop1
+git pull
+php artisan migrate
+php artisan optimize:clear
+```
+
+Despues de migrar, entrar como superadmin a `/superadmin/erp/m57`, guardar configuracion y presionar `Publicar`.
+
 ## Decision principal
 
 El administrador de M57 debe vivir principalmente en `Hub`, no en `M57`.

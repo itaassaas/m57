@@ -28,12 +28,17 @@ class StorefrontController extends Controller
 
         $categories = $this->hub->categories();
         $shuffleSeed = $request->integer('shuffle_seed') ?: random_int(1, 2147483647);
-        $products = $this->paginatedHomeProducts($request, $shuffleSeed);
+        $storefront = $this->storefrontPayload($request);
+        $products = $storefront
+            ? $this->productsFromStorefront($storefront)
+            : $this->paginatedHomeProducts($request, $shuffleSeed);
 
         return view('storefront.index', [
             'products' => $products['data'],
             'meta' => $products['meta'],
             'categories' => $categories,
+            'storefrontConfig' => $storefront['config'] ?? $this->hub->storefrontConfig(),
+            'storefrontSections' => $storefront['sections'] ?? [],
             'cartCount' => $this->cartCount(),
             'filters' => [
                 'q' => $request->string('q')->toString(),
@@ -42,6 +47,40 @@ class StorefrontController extends Controller
                 'shuffle_seed' => $shuffleSeed,
             ],
         ]);
+    }
+
+    private function storefrontPayload(Request $request): ?array
+    {
+        if ($request->string('q')->toString() !== ''
+            || $request->integer('category') > 0
+            || $request->string('sort')->toString() !== ''
+            || $request->integer('page', 1) > 1) {
+            return null;
+        }
+
+        $storefront = $this->hub->storefrontHome();
+
+        return ! empty($storefront['sections'] ?? []) ? $storefront : null;
+    }
+
+    private function productsFromStorefront(array $storefront): array
+    {
+        $items = collect($storefront['sections'] ?? [])
+            ->flatMap(fn (array $section) => $section['items'] ?? [])
+            ->filter(fn (array $item) => isset($item['id']))
+            ->unique('id')
+            ->take(24)
+            ->values();
+
+        return [
+            'data' => $items->all(),
+            'meta' => [
+                'page' => 1,
+                'per_page' => 24,
+                'total' => $items->count(),
+                'last_page' => 1,
+            ],
+        ];
     }
 
     public function homeProducts(Request $request): JsonResponse

@@ -3,6 +3,9 @@
 @section('content')
     @php
         $allProducts = collect($products)->values();
+        $storefrontConfig = $storefrontConfig ?? [];
+        $heroConfig = data_get($storefrontConfig, 'hero', []);
+        $brandConfig = data_get($storefrontConfig, 'brand', []);
         $featured = $allProducts->take(5);
         $newCollection = $allProducts->slice(5, 5);
         $flashSale = $allProducts->slice(10, 5);
@@ -12,8 +15,8 @@
         $heroSlides = [
             [
                 'badge' => '✨ NUEVA TEMPORADA',
-                'title' => "Descubre\ntu nuevo\nestilo favorito",
-                'subtitle' => 'Mas de 2.000 referencias nuevas cada semana.',
+                'title' => str_replace('|', "\n", data_get($heroConfig, 'title', "Descubre\ntu nuevo\nestilo favorito")),
+                'subtitle' => data_get($heroConfig, 'subtitle', data_get($brandConfig, 'tagline', 'Mas de 2.000 referencias nuevas cada semana.')),
                 'cta' => 'Comprar ahora',
                 'cta_href' => '#catalogo',
                 'cta_variant' => 'light',

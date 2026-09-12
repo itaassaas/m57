@@ -24,6 +24,28 @@ class HubMarketplaceApi
         ));
     }
 
+    public function storefrontHome(): array
+    {
+        try {
+            return Cache::remember('m57:storefront:home', now()->addMinutes(5), fn () => (
+                $this->client()->get('/api/m57/storefront/home')->throw()->json('data') ?? []
+            ));
+        } catch (RequestException) {
+            return [];
+        }
+    }
+
+    public function storefrontConfig(): array
+    {
+        try {
+            return Cache::remember('m57:storefront:config', now()->addMinutes(10), fn () => (
+                $this->client()->get('/api/m57/storefront/config')->throw()->json('data') ?? []
+            ));
+        } catch (RequestException) {
+            return [];
+        }
+    }
+
     public function allProducts(array $query = []): array
     {
         $query = $this->cleanQuery($query);
