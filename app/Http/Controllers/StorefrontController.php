@@ -337,6 +337,7 @@ class StorefrontController extends Controller
             'cartCount' => $this->cartCount(),
             'cartTotal' => $this->cartTotal(),
             'departments' => $this->safeDepartments(),
+            'storefrontConfig' => $this->hub->storefrontConfig(),
         ]);
     }
 

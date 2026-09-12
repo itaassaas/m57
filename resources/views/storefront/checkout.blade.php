@@ -10,7 +10,9 @@
             ['id' => 'standard', 'name' => 'Envío Estándar', 'time' => '3-5 días', 'price' => 7900, 'description' => 'La mejor opción para compra regular.'],
             ['id' => 'pickup', 'name' => 'Recogida programada', 'time' => 'Coordinar con tienda', 'price' => 0, 'description' => 'Disponible con comercios que permiten entrega directa.'],
         ];
-        $paymentOptions = [
+        $checkoutConfig = data_get($storefrontConfig ?? [], 'checkout', []);
+        $paymentVisibility = data_get($checkoutConfig, 'payment_methods', []);
+        $defaultPaymentOptions = [
             ['id' => 'card', 'label' => 'Tarjeta', 'channel' => 'tarjeta', 'type' => 'anticipado', 'copy' => 'Visa, MasterCard y débito con verificación segura.'],
             ['id' => 'pse', 'label' => 'PSE', 'channel' => 'pse', 'type' => 'anticipado', 'copy' => 'Pago instantáneo desde tu banco colombiano.'],
             ['id' => 'nequi', 'label' => 'Nequi', 'channel' => 'nequi', 'type' => 'anticipado', 'copy' => 'Aprobación rápida desde tu celular.'],
@@ -20,8 +22,21 @@
             ['id' => 'mercadopago', 'label' => 'Mercado Pago', 'channel' => 'mercadopago', 'type' => 'anticipado', 'copy' => 'Paga con saldo, tarjetas o métodos locales.'],
             ['id' => 'wompi', 'label' => 'Wompi', 'channel' => 'wompi', 'type' => 'anticipado', 'copy' => 'Validación segura y confirmación inmediata.'],
         ];
+        $paymentOptions = collect($defaultPaymentOptions)
+            ->filter(fn (array $option) => data_get($paymentVisibility, $option['id'], true))
+            ->values();
+        if ($paymentOptions->isEmpty()) {
+            $paymentOptions = collect($defaultPaymentOptions)->where('id', 'pse')->values();
+        }
+        $initialPayment = $paymentOptions->firstWhere('id', old('checkout_payment_ui', old('payment_channel', 'pse')))
+            ?? $paymentOptions->first();
         $initialShipping = $shippingOptions[1];
         $estimatedDate = now()->addDays(4)->translatedFormat('d M');
+        $trustItems = collect(explode(',', (string) data_get($checkoutConfig, 'trust_items', 'Pago seguro, Devoluciones, Envío rápido, Soporte')))
+            ->map(fn (string $item) => trim($item))
+            ->filter()
+            ->values();
+        $estimateCopy = str_replace('{date}', $estimatedDate, (string) data_get($checkoutConfig, 'estimate_copy', 'Llega entre hoy y {date} según método seleccionado.'));
     @endphp
 
     <style>
@@ -525,8 +540,8 @@
     <form method="post" action="{{ route('checkout.place') }}" id="checkout-form">
         @csrf
         <input type="hidden" name="customer_name" value="{{ old('customer_name') }}" data-full-name>
-        <input type="hidden" name="payment_type" value="{{ old('payment_type', $initialShipping['id'] ? 'anticipado' : 'cod') }}" data-payment-type>
-        <input type="hidden" name="payment_channel" value="{{ old('payment_channel', 'pse') }}" data-payment-channel>
+        <input type="hidden" name="payment_type" value="{{ old('payment_type', $initialPayment['type'] ?? 'anticipado') }}" data-payment-type>
+        <input type="hidden" name="payment_channel" value="{{ old('payment_channel', $initialPayment['channel'] ?? 'pse') }}" data-payment-channel>
 
         <section class="checkout-shell">
             <div class="checkout-main">
@@ -557,9 +572,9 @@
                     <div class="checkout-card-head">
                         <div>
                             <div class="checkout-kicker">Contacto</div>
-                            <h1 class="checkout-title">Finaliza tu compra</h1>
+                            <h1 class="checkout-title">{{ data_get($checkoutConfig, 'title', 'Finaliza tu compra') }}</h1>
                         </div>
-                        <div class="checkout-meta-copy">Checkout rápido, limpio y sin fricción.</div>
+                        <div class="checkout-meta-copy">{{ data_get($checkoutConfig, 'contact_copy', data_get($checkoutConfig, 'subtitle', 'Checkout rápido, limpio y sin fricción.')) }}</div>
                     </div>
 
                     <div class="checkout-grid">
@@ -592,7 +607,7 @@
                             <div class="checkout-kicker">Dirección</div>
                             <h2 class="checkout-title">Entrega</h2>
                         </div>
-                        <div class="checkout-meta-copy">Departamentos y ciudades conectados desde Hub.</div>
+                        <div class="checkout-meta-copy">{{ data_get($checkoutConfig, 'delivery_copy', 'Departamentos y ciudades conectados desde Hub.') }}</div>
                     </div>
 
                     <div class="checkout-grid">
@@ -642,7 +657,7 @@
                     <div class="checkout-card-head">
                         <div>
                             <div class="checkout-kicker">Método de envío</div>
-                            <h2 class="checkout-title">Elige cómo recibirlo</h2>
+                            <h2 class="checkout-title">{{ data_get($checkoutConfig, 'shipping_title', 'Elige cómo recibirlo') }}</h2>
                         </div>
                     </div>
 
@@ -668,13 +683,13 @@
                     <div class="checkout-card-head">
                         <div>
                             <div class="checkout-kicker">Pago</div>
-                            <h2 class="checkout-title">Selecciona tu método</h2>
+                            <h2 class="checkout-title">{{ data_get($checkoutConfig, 'payment_title', 'Selecciona tu método') }}</h2>
                         </div>
                     </div>
 
                     <div class="checkout-payment-grid" data-payment-options>
                         @foreach($paymentOptions as $option)
-                            <label class="checkout-option {{ $option['id'] === 'pse' ? 'is-selected' : '' }}">
+                            <label class="checkout-option {{ $option['id'] === ($initialPayment['id'] ?? 'pse') ? 'is-selected' : '' }}">
                                 <input
                                     type="radio"
                                     name="checkout_payment_ui"
@@ -682,7 +697,7 @@
                                     data-payment-option
                                     data-payment-type="{{ $option['type'] }}"
                                     data-payment-channel="{{ $option['channel'] }}"
-                                    @checked($option['id'] === 'pse')
+                                    @checked($option['id'] === ($initialPayment['id'] ?? 'pse'))
                                 >
                                 <div class="checkout-option-head">
                                     <span class="checkout-radio"></span>
@@ -706,7 +721,7 @@
                     <div class="checkout-card-head">
                         <div>
                             <div class="checkout-kicker">Notas del pedido</div>
-                            <h2 class="checkout-title">Últimos detalles</h2>
+                            <h2 class="checkout-title">{{ data_get($checkoutConfig, 'notes_title', 'Últimos detalles') }}</h2>
                         </div>
                     </div>
 
@@ -767,7 +782,7 @@
                     <div class="checkout-summary-head">
                         <div>
                             <div class="checkout-kicker">Resumen del pedido</div>
-                            <h2 class="checkout-title">Total</h2>
+                            <h2 class="checkout-title">{{ data_get($checkoutConfig, 'summary_title', 'Total') }}</h2>
                         </div>
                         <span class="checkout-pill" data-summary-items>{{ $cartCount }} artículos</span>
                     </div>
@@ -785,30 +800,28 @@
                         <button type="button" class="checkout-ghost-btn" data-apply-coupon>Aplicar</button>
                     </div>
 
-                    <div class="checkout-help" data-coupon-message>Prueba `M57SAVE10` para validar el flujo del cupón.</div>
+                    <div class="checkout-help" data-coupon-message>{{ data_get($checkoutConfig, 'coupon_hint', 'Prueba `M57SAVE10` para validar el flujo del cupón.') }}</div>
 
                     <div class="checkout-estimate">
-                        <strong>Entrega estimada</strong>
-                        <span class="checkout-help">Llega entre hoy y {{ $estimatedDate }} según método seleccionado.</span>
+                        <strong>{{ data_get($checkoutConfig, 'estimate_label', 'Entrega estimada') }}</strong>
+                        <span class="checkout-help">{{ $estimateCopy }}</span>
                         <span class="checkout-help">Ahorro actual: <strong data-summary-savings>$0</strong></span>
                     </div>
 
                     <div class="checkout-summary-payments">
-                        <span class="checkout-pay-chip">VISA</span>
-                        <span class="checkout-pay-chip">PSE</span>
-                        <span class="checkout-pay-chip">NEQUI</span>
-                        <span class="checkout-pay-chip">WOMPI</span>
+                        @foreach($paymentOptions->take(4) as $option)
+                            <span class="checkout-pay-chip">{{ strtoupper($option['label']) }}</span>
+                        @endforeach
                     </div>
 
                     <div class="checkout-security">
-                        <div class="checkout-security-item"><span class="checkout-security-icon">✓</span>Pago seguro</div>
-                        <div class="checkout-security-item"><span class="checkout-security-icon">↺</span>Devoluciones</div>
-                        <div class="checkout-security-item"><span class="checkout-security-icon">⚡</span>Envío rápido</div>
-                        <div class="checkout-security-item"><span class="checkout-security-icon">☏</span>Soporte</div>
+                        @foreach($trustItems as $item)
+                            <div class="checkout-security-item"><span class="checkout-security-icon">✓</span>{{ $item }}</div>
+                        @endforeach
                     </div>
 
                     <div style="margin-top:18px;">
-                        <button type="submit" form="checkout-form" class="checkout-primary-btn" style="width:100%;">Continuar</button>
+                        <button type="submit" form="checkout-form" class="checkout-primary-btn" style="width:100%;">{{ data_get($checkoutConfig, 'cta_label', 'Continuar') }}</button>
                     </div>
                 </div>
             </aside>
@@ -820,7 +833,7 @@
             <span class="checkout-help">Total</span>
             <strong data-mobile-total>${{ number_format($cartTotal + $initialShipping['price'], 0, ',', '.') }}</strong>
         </div>
-        <button type="submit" form="checkout-form" class="checkout-mobile-btn">Comprar</button>
+        <button type="submit" form="checkout-form" class="checkout-mobile-btn">{{ data_get($checkoutConfig, 'mobile_cta_label', 'Comprar') }}</button>
     </div>
 
     <script>
