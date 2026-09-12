@@ -951,25 +951,17 @@
             opacity: .82;
         }
         .editorial-banner.dark {
-            background-image:
-                linear-gradient(135deg, rgba(7,7,7,.34) 0%, rgba(27,27,27,.48) 52%, rgba(59,10,23,.62) 100%),
-                url('https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1200&q=80');
+            background: linear-gradient(135deg, #090909 0%, #202020 52%, #561126 100%);
         }
         .editorial-banner.red {
-            background-image:
-                linear-gradient(135deg, rgba(255,53,89,.28) 0%, rgba(255,99,127,.4) 60%, rgba(255,154,176,.5) 100%),
-                url('https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1200&q=80');
+            background: linear-gradient(135deg, #ff244f 0%, #ff637f 58%, #ffb1c2 100%);
         }
         .editorial-banner.gray {
-            background-image:
-                linear-gradient(135deg, rgba(38,43,51,.28) 0%, rgba(63,72,84,.42) 52%, rgba(82,92,107,.56) 100%),
-                url('https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=1200&q=80');
+            background: linear-gradient(135deg, #262b33 0%, #46505e 52%, #747f90 100%);
         }
         .editorial-banner.beige {
             color: #fff;
-            background-image:
-                linear-gradient(135deg, rgba(120,87,52,.22) 0%, rgba(89,59,32,.36) 55%, rgba(52,33,18,.52) 100%),
-                url('https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=1200&q=80');
+            background: linear-gradient(135deg, #785734 0%, #593b20 55%, #341f12 100%);
         }
         .editorial-banner.pink {
             color: var(--ink);
@@ -1154,9 +1146,7 @@
         .slide-drawer-banner {
             min-height: 170px;
             border-radius: 18px;
-            background:
-                linear-gradient(135deg, rgba(0,0,0,.18), rgba(0,0,0,.02)),
-                url('https://picsum.photos/seed/m57-drawer/900/1200') center/cover;
+            background: linear-gradient(135deg, #111 0%, #3a1420 54%, #ff315d 100%);
             display: flex;
             align-items: end;
             padding: 18px;
@@ -2429,6 +2419,27 @@
         };
     </script>
     <script src="https://cdn.jsdelivr.net/gh/orestbida/cookieconsent@3.1.0/dist/cookieconsent.umd.js" defer onload="window.initM57CookieConsent && window.initM57CookieConsent()"></script>
+
+    <script>
+        (() => {
+            const loadDeferredImages = (root = document) => {
+                root.querySelectorAll('img[data-deferred-src]').forEach((image) => {
+                    image.src = image.dataset.deferredSrc;
+                    image.removeAttribute('data-deferred-src');
+                });
+            };
+
+            document.addEventListener('pointerover', (event) => {
+                const card = event.target.closest('.card, .mega-product');
+                if (card) loadDeferredImages(card);
+            }, { passive: true });
+
+            document.addEventListener('focusin', (event) => {
+                const card = event.target.closest('.card, .mega-product');
+                if (card) loadDeferredImages(card);
+            });
+        })();
+    </script>
 
     <script>
         (() => {

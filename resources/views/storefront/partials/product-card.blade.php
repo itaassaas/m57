@@ -6,7 +6,7 @@
         <span class="wish">♡</span>
         <img class="primary" src="{{ $product['image'] }}" alt="{{ $product['name'] }}" loading="lazy" decoding="async">
         @if(!empty($product['secondary_image']))
-            <img class="secondary" src="{{ $product['secondary_image'] }}" alt="{{ $product['name'] }}" loading="lazy" decoding="async">
+            <img class="secondary" data-deferred-src="{{ $product['secondary_image'] }}" alt="{{ $product['name'] }}" loading="lazy" decoding="async">
         @endif
     </a>
     <div class="card-body">
