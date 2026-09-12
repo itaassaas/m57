@@ -30,7 +30,7 @@ class StorefrontController extends Controller
         $shuffleSeed = $request->integer('shuffle_seed') ?: random_int(1, 2147483647);
         $storefront = $this->storefrontPayload($request);
         $products = $storefront
-            ? $this->productsFromStorefront($storefront)
+            ? $this->productsFromStorefront($storefront, $shuffleSeed)
             : $this->paginatedHomeProducts($request, $shuffleSeed);
         $this->hub->trackEvent('home_view', [
             'meta' => [
@@ -69,12 +69,16 @@ class StorefrontController extends Controller
         return ! empty($storefront['sections'] ?? []) ? $storefront : null;
     }
 
-    private function productsFromStorefront(array $storefront): array
+    private function productsFromStorefront(array $storefront, int $shuffleSeed): array
     {
         $items = collect($storefront['sections'] ?? [])
             ->flatMap(fn (array $section) => $section['items'] ?? [])
             ->filter(fn (array $item) => isset($item['id']))
             ->unique('id')
+            ->sortBy(fn (array $product) => crc32($shuffleSeed.':'.($product['id'] ?? '')))
+            ->values();
+
+        $items = $this->spreadByOwner($items)
             ->take(24)
             ->values();
 
@@ -83,10 +87,29 @@ class StorefrontController extends Controller
             'meta' => [
                 'page' => 1,
                 'per_page' => 24,
-                'total' => $items->count(),
-                'last_page' => 1,
+                'total' => max(48, $items->count()),
+                'last_page' => 2,
             ],
         ];
+    }
+
+    private function spreadByOwner($items)
+    {
+        $groups = $items->groupBy(fn (array $item) => data_get($item, 'owner.id', 0))->map->values();
+        $spread = collect();
+
+        while ($groups->isNotEmpty()) {
+            foreach ($groups->keys() as $ownerId) {
+                $group = $groups->get($ownerId);
+                $spread->push($group->shift());
+
+                $group->isEmpty()
+                    ? $groups->forget($ownerId)
+                    : $groups->put($ownerId, $group);
+            }
+        }
+
+        return $spread;
     }
 
     public function homeProducts(Request $request): JsonResponse
