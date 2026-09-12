@@ -10,7 +10,7 @@ class HubMarketplaceApi
 {
     public function categories(): array
     {
-        return Cache::remember('m57:categories', now()->addHours(6), fn () => (
+        return Cache::remember($this->versionedCacheKey('m57:categories'), now()->addHours(6), fn () => (
             $this->client()->get('/api/m57/catalog/categories')->throw()->json('data') ?? []
         ));
     }
@@ -19,7 +19,7 @@ class HubMarketplaceApi
     {
         $query = $this->cleanQuery($query);
 
-        return Cache::remember($this->cacheKey('m57:products', $query), now()->addMinutes(5), fn () => (
+        return Cache::remember($this->versionedCacheKey('m57:products', $query), now()->addMinutes(5), fn () => (
             $this->client()->get('/api/m57/catalog/products', $query)->throw()->json()
         ));
     }
@@ -27,7 +27,7 @@ class HubMarketplaceApi
     public function storefrontHome(): array
     {
         try {
-            return Cache::remember('m57:storefront:home', now()->addMinutes(5), fn () => (
+            return Cache::remember($this->versionedCacheKey('m57:storefront:home'), now()->addMinutes(5), fn () => (
                 $this->client()->get('/api/m57/storefront/home')->throw()->json('data') ?? []
             ));
         } catch (RequestException) {
@@ -38,7 +38,7 @@ class HubMarketplaceApi
     public function storefrontConfig(): array
     {
         try {
-            return Cache::remember('m57:storefront:config', now()->addMinutes(10), fn () => (
+            return Cache::remember($this->versionedCacheKey('m57:storefront:config'), now()->addMinutes(10), fn () => (
                 $this->client()->get('/api/m57/storefront/config')->throw()->json('data') ?? []
             ));
         } catch (RequestException) {
@@ -49,7 +49,7 @@ class HubMarketplaceApi
     public function allProducts(array $query = []): array
     {
         $query = $this->cleanQuery($query);
-        $cacheKey = $this->cacheKey('m57:catalog', $query);
+        $cacheKey = $this->versionedCacheKey('m57:catalog', $query);
 
         return Cache::remember($cacheKey, now()->addMinutes(10), fn () => $this->fetchAllProducts($query));
     }
@@ -105,7 +105,7 @@ class HubMarketplaceApi
 
     public function product(int $productId): array
     {
-        return Cache::remember("m57:product:{$productId}", now()->addMinutes(10), fn () => (
+        return Cache::remember($this->versionedCacheKey("m57:product:{$productId}"), now()->addMinutes(10), fn () => (
             $this->client()->get("/api/m57/catalog/products/{$productId}")->throw()->json('data') ?? []
         ));
     }
@@ -148,6 +148,25 @@ class HubMarketplaceApi
             ->acceptJson()
             ->timeout(8)
             ->retry(2, 150, fn ($exception) => ! ($exception instanceof RequestException && $exception->response?->status() === 429));
+    }
+
+    private function storefrontVersion(): string
+    {
+        try {
+            return (string) ($this->client()
+                ->get('/api/m57/storefront/version')
+                ->throw()
+                ->json('data.version') ?? 'initial');
+        } catch (RequestException) {
+            return 'initial';
+        }
+    }
+
+    private function versionedCacheKey(string $prefix, array $query = []): string
+    {
+        $version = $this->storefrontVersion();
+
+        return $this->cacheKey($prefix, array_merge(['_v' => $version], $query));
     }
 
     private function spreadByOwner($items)
