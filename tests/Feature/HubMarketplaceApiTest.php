@@ -9,6 +9,32 @@ use Tests\TestCase;
 
 class HubMarketplaceApiTest extends TestCase
 {
+    public function test_categories_and_product_details_are_cached(): void
+    {
+        Cache::flush();
+
+        config([
+            'services.hub.base_url' => 'https://hub.test',
+            'services.hub.token' => 'token',
+        ]);
+
+        Http::fake([
+            'hub.test/api/m57/catalog/categories' => Http::response(['data' => [
+                ['id' => 2, 'name' => 'Moda'],
+            ]]),
+            'hub.test/api/m57/catalog/products/99' => Http::response(['data' => $this->product(99, 10, 'BUMERANG')]),
+        ]);
+
+        $service = app(HubMarketplaceApi::class);
+
+        $this->assertSame('Moda', $service->categories()[0]['name']);
+        $this->assertSame('Moda', $service->categories()[0]['name']);
+        $this->assertSame(99, $service->product(99)['id']);
+        $this->assertSame(99, $service->product(99)['id']);
+
+        Http::assertSentCount(2);
+    }
+
     public function test_all_products_fetches_pages_and_spreads_owners(): void
     {
         Cache::flush();
@@ -71,7 +97,7 @@ class HubMarketplaceApiTest extends TestCase
     {
         return [
             'id' => $id,
-            'name' => 'Producto ' . $id,
+            'name' => 'Producto '.$id,
             'owner' => ['id' => $ownerId, 'name' => $ownerName],
         ];
     }

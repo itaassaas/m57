@@ -11,14 +11,14 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class StorefrontController extends Controller
 {
     public function __construct(
         private readonly HubMarketplaceApi $hub
-    ) {
-    }
+    ) {}
 
     public function index(Request $request): View
     {
@@ -62,13 +62,13 @@ class StorefrontController extends Controller
 
     private function paginatedHomeProducts(Request $request, int $shuffleSeed): array
     {
-        $products = $this->hub->freshAllProducts([
+        $products = $this->hub->allProducts([
             'q' => $request->string('q')->toString(),
             'category' => $request->integer('category'),
             'sort' => $request->string('sort')->toString() ?: 'newest',
         ]);
         $items = collect($this->homeFashionProducts($products['data'] ?? []))
-            ->sortBy(fn (array $product) => crc32($shuffleSeed . ':' . ($product['id'] ?? '')))
+            ->sortBy(fn (array $product) => crc32($shuffleSeed.':'.($product['id'] ?? '')))
             ->values();
         $page = max(1, $request->integer('page', 1));
         $perPage = 24;
@@ -88,7 +88,7 @@ class StorefrontController extends Controller
     {
         $categories = collect($this->hub->categories());
         $category = $categories->firstWhere('id', $categoryId);
-        abort_if(!$category, 404);
+        abort_if(! $category, 404);
 
         $sort = $request->string('sort')->toString() ?: 'newest';
         $products = $this->hub->products([
@@ -181,7 +181,7 @@ class StorefrontController extends Controller
         $variationId = isset($data['variation_id']) ? (int) $data['variation_id'] : null;
         $variation = collect($product['variations'] ?? [])->firstWhere('id', $variationId);
 
-        if (($product['type'] ?? 'simple') === 'variable' && !$variation) {
+        if (($product['type'] ?? 'simple') === 'variable' && ! $variation) {
             return back()->withErrors(['variation_id' => 'Debes elegir una variación.'])->withInput();
         }
 
@@ -309,7 +309,7 @@ class StorefrontController extends Controller
         try {
             $geo = Http::timeout(12)
                 ->acceptJson()
-                ->get('https://api.mapbox.com/geocoding/v5/mapbox.places/' . rawurlencode($query) . '.json', [
+                ->get('https://api.mapbox.com/geocoding/v5/mapbox.places/'.rawurlencode($query).'.json', [
                     'access_token' => $token,
                     'limit' => 1,
                     'country' => 'co',
@@ -320,7 +320,7 @@ class StorefrontController extends Controller
 
             $feature = $geo['features'][0] ?? null;
             $center = $feature['center'] ?? null;
-            if (!is_array($center) || count($center) < 2) {
+            if (! is_array($center) || count($center) < 2) {
                 return response()->json(['data' => null]);
             }
 
@@ -342,7 +342,7 @@ class StorefrontController extends Controller
                     'label' => $feature['place_name_es'] ?? $feature['place_name'] ?? $query,
                     'lat' => $lat,
                     'lng' => $lng,
-                    'image_url' => 'data:image/png;base64,' . base64_encode($static->body()),
+                    'image_url' => 'data:image/png;base64,'.base64_encode($static->body()),
                 ],
             ]);
         } catch (\Throwable $e) {
@@ -395,7 +395,7 @@ class StorefrontController extends Controller
             $response = $this->hub->checkout($payload);
         } catch (\Throwable $e) {
             return back()->withInput()->withErrors([
-                'checkout' => 'No se pudo crear la orden en Hub: ' . $e->getMessage(),
+                'checkout' => 'No se pudo crear la orden en Hub: '.$e->getMessage(),
             ]);
         }
 
@@ -437,7 +437,7 @@ class StorefrontController extends Controller
 
             foreach ($cartItems as $item) {
                 $store = $stores[$item['owner_id']] ?? null;
-                if (!$store) {
+                if (! $store) {
                     continue;
                 }
 
@@ -494,7 +494,7 @@ class StorefrontController extends Controller
 
     private function cartKey(int $productId, ?int $variationId): string
     {
-        return $productId . ':' . ($variationId ?: 0);
+        return $productId.':'.($variationId ?: 0);
     }
 
     private function cartSnapshot(): array
@@ -564,7 +564,7 @@ class StorefrontController extends Controller
 
     private function categoryKey(string $name): string
     {
-        return \Illuminate\Support\Str::of($name)->lower()->ascii()->replace('&', ' y ')->squish()->value();
+        return Str::of($name)->lower()->ascii()->replace('&', ' y ')->squish()->value();
     }
 
     private function productStatePayload(array $product, ?array $variation = null): array

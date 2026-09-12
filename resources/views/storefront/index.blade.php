@@ -176,7 +176,7 @@
                     @foreach($megaFeatured as $product)
                         <a href="{{ route('products.show', $product['id']) }}" class="mega-product">
                             <span class="mega-product-media">
-                                <img src="{{ $product['image'] }}" alt="{{ $product['name'] }}" loading="lazy">
+                                <img src="{{ $product['image'] }}" alt="{{ $product['name'] }}" loading="lazy" decoding="async">
                             </span>
                             <span class="mega-product-copy">
                                 <span class="mega-title">Destacado</span>
@@ -208,9 +208,16 @@
                                     <a href="{{ route('products.show', $product['id']) }}" class="card-media hero-product-media">
                                         <span class="sale-chip">{{ $loop->first ? 'HOT' : 'NEW' }}</span>
                                         <span class="wish">♡</span>
-                                        <img class="primary" src="{{ $product['image'] }}" alt="{{ $product['name'] }}" loading="lazy">
+                                        <img
+                                            class="primary"
+                                            src="{{ $product['image'] }}"
+                                            alt="{{ $product['name'] }}"
+                                            loading="{{ $loop->parent->first && $loop->first ? 'eager' : 'lazy' }}"
+                                            decoding="{{ $loop->parent->first && $loop->first ? 'sync' : 'async' }}"
+                                            @if($loop->parent->first && $loop->first) fetchpriority="high" @endif
+                                        >
                                         @if(!empty($product['secondary_image']))
-                                            <img class="secondary" src="{{ $product['secondary_image'] }}" alt="{{ $product['name'] }}" loading="lazy">
+                                            <img class="secondary" src="{{ $product['secondary_image'] }}" alt="{{ $product['name'] }}" loading="lazy" decoding="async">
                                         @endif
                                     </a>
                                     <div class="card-body">
@@ -262,7 +269,7 @@
                         class="category-icon"
                         src="{{ $visualCategoryImages[$categoryName] ?? 'https://picsum.photos/seed/category-'.($category['id'] ?? \Illuminate\Support\Str::slug($categoryName)).'/200' }}"
                         alt="{{ $categoryName }}"
-                        loading="lazy"
+                        loading="lazy" decoding="async"
                     >
                     <div class="category-name">{{ $categoryName }}</div>
                 </a>
@@ -284,9 +291,9 @@
                     <a href="{{ route('products.show', $product['id']) }}" class="card-media">
                         <span class="sale-chip">TOP</span>
                         <span class="wish">♡</span>
-                        <img class="primary" src="{{ $product['image'] }}" alt="{{ $product['name'] }}" loading="lazy">
+                        <img class="primary" src="{{ $product['image'] }}" alt="{{ $product['name'] }}" loading="lazy" decoding="async">
                         @if(!empty($product['secondary_image']))
-                            <img class="secondary" src="{{ $product['secondary_image'] }}" alt="{{ $product['name'] }}" loading="lazy">
+                            <img class="secondary" src="{{ $product['secondary_image'] }}" alt="{{ $product['name'] }}" loading="lazy" decoding="async">
                         @endif
                     </a>
                     <div class="card-body">
@@ -319,9 +326,9 @@
                         <a href="{{ route('products.show', $product['id']) }}" class="card-media">
                             <span class="sale-chip">NEW</span>
                             <span class="wish">♡</span>
-                            <img class="primary" src="{{ $product['image'] }}" alt="{{ $product['name'] }}" loading="lazy">
+                            <img class="primary" src="{{ $product['image'] }}" alt="{{ $product['name'] }}" loading="lazy" decoding="async">
                             @if(!empty($product['secondary_image']))
-                                <img class="secondary" src="{{ $product['secondary_image'] }}" alt="{{ $product['name'] }}" loading="lazy">
+                                <img class="secondary" src="{{ $product['secondary_image'] }}" alt="{{ $product['name'] }}" loading="lazy" decoding="async">
                             @endif
                         </a>
                         <div class="card-body">
@@ -346,9 +353,9 @@
                         <a href="{{ route('products.show', $product['id']) }}" class="card-media">
                             <span class="sale-chip">SALE</span>
                             <span class="wish">♡</span>
-                            <img class="primary" src="{{ $product['image'] }}" alt="{{ $product['name'] }}" loading="lazy">
+                            <img class="primary" src="{{ $product['image'] }}" alt="{{ $product['name'] }}" loading="lazy" decoding="async">
                             @if(!empty($product['secondary_image']))
-                                <img class="secondary" src="{{ $product['secondary_image'] }}" alt="{{ $product['name'] }}" loading="lazy">
+                                <img class="secondary" src="{{ $product['secondary_image'] }}" alt="{{ $product['name'] }}" loading="lazy" decoding="async">
                             @endif
                         </a>
                         <div class="card-body">
@@ -376,9 +383,9 @@
                         <a href="{{ route('products.show', $product['id']) }}" class="card-media">
                             <span class="sale-chip">TREND</span>
                             <span class="wish">♡</span>
-                            <img class="primary" src="{{ $product['image'] }}" alt="{{ $product['name'] }}" loading="lazy">
+                            <img class="primary" src="{{ $product['image'] }}" alt="{{ $product['name'] }}" loading="lazy" decoding="async">
                             @if(!empty($product['secondary_image']))
-                                <img class="secondary" src="{{ $product['secondary_image'] }}" alt="{{ $product['name'] }}" loading="lazy">
+                                <img class="secondary" src="{{ $product['secondary_image'] }}" alt="{{ $product['name'] }}" loading="lazy" decoding="async">
                             @endif
                         </a>
                         <div class="card-body">
@@ -403,9 +410,9 @@
                         <a href="{{ route('products.show', $product['id']) }}" class="card-media">
                             <span class="sale-chip">PREMIUM</span>
                             <span class="wish">♡</span>
-                            <img class="primary" src="{{ $product['image'] }}" alt="{{ $product['name'] }}" loading="lazy">
+                            <img class="primary" src="{{ $product['image'] }}" alt="{{ $product['name'] }}" loading="lazy" decoding="async">
                             @if(!empty($product['secondary_image']))
-                                <img class="secondary" src="{{ $product['secondary_image'] }}" alt="{{ $product['name'] }}" loading="lazy">
+                                <img class="secondary" src="{{ $product['secondary_image'] }}" alt="{{ $product['name'] }}" loading="lazy" decoding="async">
                             @endif
                         </a>
                         <div class="card-body">

@@ -7,8 +7,10 @@
     <link rel="icon" type="image/png" href="{{ asset('storage/logo.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400&family=Mulish:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orestbida/cookieconsent@3.1.0/dist/cookieconsent.css">
+    <link rel="preload" href="https://cdn.jsdelivr.net/gh/orestbida/cookieconsent@3.1.0/dist/cookieconsent.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orestbida/cookieconsent@3.1.0/dist/cookieconsent.css"></noscript>
     <style>
         :root {
             --bg: #f5f5f5;
@@ -2046,9 +2048,8 @@
 
     <button type="button" class="cookie-settings-trigger is-hidden" data-cc="show-preferencesModal">Cookies</button>
 
-    <script src="https://cdn.jsdelivr.net/gh/orestbida/cookieconsent@3.1.0/dist/cookieconsent.umd.js"></script>
     <script>
-        (() => {
+        window.initM57CookieConsent = () => {
             if (!window.CookieConsent) return;
 
             const cookieTrigger = document.querySelector('.cookie-settings-trigger');
@@ -2181,8 +2182,9 @@
             });
 
             syncCookieTrigger();
-        })();
+        };
     </script>
+    <script src="https://cdn.jsdelivr.net/gh/orestbida/cookieconsent@3.1.0/dist/cookieconsent.umd.js" defer onload="window.initM57CookieConsent && window.initM57CookieConsent()"></script>
 
     <script>
         (() => {

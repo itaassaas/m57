@@ -10,17 +10,24 @@ class HubMarketplaceApi
 {
     public function categories(): array
     {
-        return $this->client()->get('/api/m57/catalog/categories')->throw()->json('data') ?? [];
+        return Cache::remember('m57:categories', now()->addHours(6), fn () => (
+            $this->client()->get('/api/m57/catalog/categories')->throw()->json('data') ?? []
+        ));
     }
 
     public function products(array $query = []): array
     {
-        return $this->client()->get('/api/m57/catalog/products', $query)->throw()->json();
+        $query = $this->cleanQuery($query);
+
+        return Cache::remember($this->cacheKey('m57:products', $query), now()->addMinutes(5), fn () => (
+            $this->client()->get('/api/m57/catalog/products', $query)->throw()->json()
+        ));
     }
 
     public function allProducts(array $query = []): array
     {
-        $cacheKey = 'm57:catalog:' . md5(json_encode($query));
+        $query = $this->cleanQuery($query);
+        $cacheKey = $this->cacheKey('m57:catalog', $query);
 
         return Cache::remember($cacheKey, now()->addMinutes(10), fn () => $this->fetchAllProducts($query));
     }
@@ -76,7 +83,9 @@ class HubMarketplaceApi
 
     public function product(int $productId): array
     {
-        return $this->client()->get("/api/m57/catalog/products/{$productId}")->throw()->json('data') ?? [];
+        return Cache::remember("m57:product:{$productId}", now()->addMinutes(10), fn () => (
+            $this->client()->get("/api/m57/catalog/products/{$productId}")->throw()->json('data') ?? []
+        ));
     }
 
     public function checkout(array $payload): array
@@ -86,12 +95,16 @@ class HubMarketplaceApi
 
     public function departments(): array
     {
-        return $this->client()->get('/api/m57/locations/departments')->throw()->json('data') ?? [];
+        return Cache::remember('m57:departments', now()->addDay(), fn () => (
+            $this->client()->get('/api/m57/locations/departments')->throw()->json('data') ?? []
+        ));
     }
 
     public function cities(string $departmentId): array
     {
-        return $this->client()->get("/api/m57/locations/departments/{$departmentId}/cities")->throw()->json('data') ?? [];
+        return Cache::remember("m57:cities:{$departmentId}", now()->addDay(), fn () => (
+            $this->client()->get("/api/m57/locations/departments/{$departmentId}/cities")->throw()->json('data') ?? []
+        ));
     }
 
     private function client()
@@ -99,7 +112,8 @@ class HubMarketplaceApi
         return Http::baseUrl(rtrim((string) config('services.hub.base_url'), '/'))
             ->withToken((string) config('services.hub.token'))
             ->acceptJson()
-            ->timeout(20);
+            ->timeout(8)
+            ->retry(2, 150, fn ($exception) => ! ($exception instanceof RequestException && $exception->response?->status() === 429));
     }
 
     private function spreadByOwner($items)
@@ -119,5 +133,18 @@ class HubMarketplaceApi
         }
 
         return $spread;
+    }
+
+    private function cleanQuery(array $query): array
+    {
+        return collect($query)
+            ->reject(fn ($value) => $value === null || $value === '')
+            ->sortKeys()
+            ->all();
+    }
+
+    private function cacheKey(string $prefix, array $query): string
+    {
+        return $prefix.':'.md5(json_encode($query, JSON_THROW_ON_ERROR));
     }
 }
