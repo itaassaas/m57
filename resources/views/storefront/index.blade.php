@@ -156,6 +156,10 @@
             'Juguetes y Juegos' => asset('storage/categorias-visual/Juegos y Juguetes.png'),
             'Útiles escolares y de oficina' => asset('storage/categorias-visual/Útiles escolares y de oficina.png'),
         ];
+        $visualCategoryImageOverrides = collect(data_get($storefrontConfig, 'visual_categories.images', []))
+            ->filter(fn ($url) => filled($url))
+            ->all();
+        $visualCategoryImages = array_replace($visualCategoryImages, $visualCategoryImageOverrides);
     @endphp
 
     @section('subnav_mega_menu')
