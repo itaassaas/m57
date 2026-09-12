@@ -1944,6 +1944,250 @@
                 padding-right: max(14px, calc((100vw - 1380px) / 2));
             }
         }
+        @media (max-width: 760px) {
+            .shell {
+                width: min(100% - 18px, 1380px);
+            }
+            .promo-inner {
+                min-height: 32px;
+                justify-content: center;
+            }
+            .promo-inner > .promo-badge {
+                display: none;
+            }
+            .promo-badges {
+                gap: 14px;
+                scrollbar-width: none;
+            }
+            .promo-badges::-webkit-scrollbar {
+                display: none;
+            }
+            .topbar-inner {
+                grid-template-columns: auto minmax(0, 1fr) auto;
+                gap: 10px;
+                min-height: 64px;
+                padding: 8px 0;
+            }
+            .brand {
+                font-size: 28px;
+            }
+            .brand-wordmark {
+                letter-spacing: .06em;
+            }
+            .searchbar {
+                min-width: 0;
+                padding: 9px 12px;
+                gap: 8px;
+            }
+            .searchbar input {
+                min-width: 0;
+                font-size: 14px;
+            }
+            .top-actions {
+                gap: 6px;
+            }
+            .icon-btn {
+                display: none;
+            }
+            .cart-pill {
+                min-height: 38px;
+                padding: 0 11px;
+                font-size: 0;
+            }
+            .cart-pill::before {
+                content: "Bolsa";
+                font-size: 13px;
+            }
+            .cart-pill span {
+                min-width: 22px;
+                height: 22px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 999px;
+                background: var(--accent);
+                color: #fff;
+                font-size: 11px;
+            }
+            .subnav {
+                position: sticky;
+                top: 64px;
+                z-index: 100;
+            }
+            .subnav-inner {
+                min-height: 46px;
+                gap: 8px;
+                padding: 6px 0;
+                scrollbar-width: none;
+            }
+            .subnav-inner::-webkit-scrollbar {
+                display: none;
+            }
+            .nav-pill {
+                min-height: 32px;
+                padding: 0 12px;
+                font-size: 12px;
+                background: #fff;
+                border-color: var(--line);
+            }
+            .subnav-mega-item .mega-menu {
+                display: none;
+            }
+            .hero-banner {
+                padding: 10px 9px 14px;
+            }
+            .hero-carousel {
+                border-radius: 16px;
+            }
+            .hero-slide {
+                padding: 22px 14px 58px;
+            }
+            .hero-slide-copy {
+                max-width: none;
+            }
+            .hero-slide-badge {
+                min-height: 30px;
+                padding: 0 12px;
+                font-size: 10px;
+            }
+            .hero-slide-cta {
+                min-height: 42px;
+                padding: 0 16px;
+                font-size: 14px;
+            }
+            .hero-product-card .card-actions,
+            .product-strip .card-actions {
+                grid-template-columns: 1fr;
+            }
+            .section-head,
+            .wall-head {
+                align-items: start;
+                flex-direction: column;
+            }
+            .section-title {
+                font-size: 24px;
+                line-height: 1;
+            }
+            .section-title.centered-lines {
+                width: 100%;
+                justify-content: center;
+                gap: 10px;
+                font-size: 22px;
+            }
+            .section-title.centered-lines::before,
+            .section-title.centered-lines::after {
+                width: 44px;
+            }
+            .wall-card {
+                padding: 12px;
+                border-radius: 14px;
+            }
+            .wall-title {
+                font-size: 26px;
+                line-height: 1;
+            }
+            .product-wall,
+            .product-strip {
+                gap: 10px;
+            }
+            .card-body {
+                padding: 10px;
+            }
+            .title {
+                font-size: 13px;
+                line-height: 1.25;
+            }
+            .price-row {
+                gap: 6px;
+                flex-wrap: wrap;
+            }
+            .price {
+                font-size: 15px;
+            }
+            .old-price,
+            .eyebrow,
+            .rating-row {
+                font-size: 11px;
+            }
+            .quick-link,
+            .add-btn {
+                min-height: 36px;
+                padding: 0 10px;
+                font-size: 12px;
+            }
+            .editorial-banner {
+                min-height: 180px;
+                border-radius: 14px;
+            }
+            .newsletter {
+                border-radius: 16px;
+                padding: 22px 16px;
+            }
+            .newsletter h2 {
+                font-size: 28px;
+            }
+            .site-footer {
+                margin-top: 24px;
+                padding-bottom: 28px;
+            }
+        }
+        @media (max-width: 430px) {
+            .topbar-inner {
+                grid-template-columns: 1fr auto;
+            }
+            .brand {
+                grid-column: 1;
+            }
+            .top-actions {
+                grid-column: 2;
+                grid-row: 1;
+            }
+            .searchbar {
+                grid-column: 1 / -1;
+                grid-row: 2;
+            }
+            .subnav {
+                top: 104px;
+            }
+            .hero-slide-title {
+                font-size: 34px;
+            }
+            .product-wall,
+            .product-strip {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 8px;
+            }
+            .category-showcase {
+                grid-auto-columns: calc((100% - 8px) / 2);
+                gap: 8px;
+            }
+            .category-icon {
+                width: 74px;
+                height: 74px;
+            }
+            .category-name {
+                font-size: 10px;
+            }
+            .card-media {
+                aspect-ratio: 3 / 4;
+            }
+            .card-body {
+                padding: 9px;
+                gap: 7px;
+            }
+            .title {
+                min-height: 32px;
+            }
+            .card-actions {
+                gap: 6px;
+            }
+            .quick-link {
+                display: none;
+            }
+            .add-btn {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body class="{{ $bodyClass ?? '' }}">
