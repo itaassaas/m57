@@ -1463,10 +1463,10 @@
             opacity: 0;
         }
         .card:hover .card-media .primary {
-            opacity: 0;
+            opacity: 1;
             transform: scale(1.04);
         }
-        .card:hover .card-media .secondary { opacity: 1; }
+        .card:hover .card-media .secondary.is-loaded { opacity: 1; }
         .wish,
         .stock-chip,
         .sale-chip {
@@ -1738,10 +1738,10 @@
                 box-shadow: 0 16px 30px rgba(17,17,17,.08);
             }
             .card:hover .card-media .primary {
-                opacity: 0;
+                opacity: 1;
                 transform: scale(1.04);
             }
-            .card:hover .card-media .secondary { opacity: 1; }
+            .card:hover .card-media .secondary.is-loaded { opacity: 1; }
             .card:hover .wish { transform: scale(1.04); }
             .quick-link:hover {
                 transform: translateY(-1px);
@@ -2423,6 +2423,16 @@
 
     <script>
         (() => {
+            const markSecondaryLoaded = (image) => {
+                if (image instanceof HTMLImageElement && image.matches('.card-media .secondary')) {
+                    image.classList.toggle('is-loaded', image.complete && image.naturalWidth > 0);
+                }
+            };
+
+            document.addEventListener('load', (event) => markSecondaryLoaded(event.target), true);
+            document.addEventListener('error', (event) => markSecondaryLoaded(event.target), true);
+            document.querySelectorAll('.card-media .secondary').forEach(markSecondaryLoaded);
+
             const loadDeferredImages = (root = document) => {
                 root.querySelectorAll('img[data-deferred-src]').forEach((image) => {
                     image.src = image.dataset.deferredSrc;
