@@ -2,6 +2,18 @@
 
 ## Resumen
 
+## Categorias seleccionadas desde el admin (2026-09-18)
+
+El admin del Hub controla visibilidad y orden mediante `m57_category_visibility`.
+M57 recibe esa seleccion desde `/api/m57/catalog/categories` y la home muestra
+las categorias recibidas, en el mismo orden. Se eliminaron los reemplazos por
+categorias arbitrarias cuando un enlace del menu no tiene categoria disponible.
+Las imagenes configuradas en el admin se conservan para los nombres coincidentes.
+
+Para publicar, actualizar ambos repositorios. En el Hub ejecutar
+`php artisan migrate` y `php artisan optimize:clear`. En M57 ejecutar
+`php artisan optimize:clear` despues del pull de `main`.
+
 M57 quedo como repositorio independiente dentro de `flumedrop1` usando Git submodule.
 
 - Repo independiente: `https://github.com/itaassaas/m57.git`

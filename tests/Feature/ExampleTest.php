@@ -101,6 +101,9 @@ class ExampleTest extends TestCase
             ->assertSee('Vestido prueba')
             ->assertSee('Bolso visual')
             ->assertSee('Hub Demo')
+            ->assertSee('<div class="category-name">Moda</div>', false)
+            ->assertSee('<div class="category-name">Tecnología</div>', false)
+            ->assertDontSee('<div class="category-name">Curvy</div>', false)
             ->assertDontSee('Vestido oculto')
             ->assertDontSee('Soporte celular');
     }

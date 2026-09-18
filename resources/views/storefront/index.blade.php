@@ -124,11 +124,7 @@
                 return $matched;
             }
 
-            if ($fallbackIndex !== null && $availableCategories->isNotEmpty()) {
-                return $availableCategories->get($fallbackIndex % $availableCategories->count());
-            }
-
-            return $availableCategories->first();
+            return null;
         };
         $visualCategoryImages = [
             'Mujer' => asset('storage/categorias-visual/Mujer.png'),
@@ -173,6 +169,7 @@
                                 @php
                                     $linkedCategory = $resolveCategory($targetCategory, $loop->parent->index + $loop->index);
                                 @endphp
+                                @continue(! $linkedCategory)
                                 <a href="{{ $linkedCategory ? route('categories.show', $linkedCategory['id']) : route('home') }}" class="mega-link">{{ $label }}</a>
                             @endforeach
                         </div>
@@ -284,9 +281,9 @@
             <h2 class="section-title">Categorias visuales</h2>
         </div>
         <div class="category-showcase">
-            @foreach($visualCategoryNames as $categoryName)
+            @foreach($availableCategories as $category)
                 @php
-                    $category = $resolveCategory($categoryName, $loop->index);
+                    $categoryName = $category['name'];
                 @endphp
                 <a href="{{ $category ? route('categories.show', ['categoryId' => $category['id'], 'q' => $filters['q'], 'sort' => $filters['sort']]) : route('home') }}" class="category-tile">
                     <img
