@@ -250,7 +250,9 @@ class StorefrontController extends Controller
         // escritura ("cannabis" vs. "cannabs") no puede delegarse a LIKE.
         $matches = collect($this->hub->allProducts()['data'] ?? [])
             ->filter(fn (array $product) => $this->matchesStoreSearch(
-                (string) data_get($product, 'owner.name'),
+                collect(data_get($product, 'owner.search_names', [data_get($product, 'owner.name')]))
+                    ->filter()
+                    ->implode(' '),
                 $term
             ))
             ->groupBy(fn (array $product) => (int) data_get($product, 'owner.id', 0))

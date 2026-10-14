@@ -34,6 +34,8 @@ El buscador también reconoce la empresa que publica los productos. Cuando el t�
 
 Hub aplica el filtro `owner_user_id` antes de entregar los productos y continúa aplicando las reglas de visibilidad, disponibilidad y categoría pública. Por tanto, el parámetro no permite consultar productos que no estén publicados en M57.
 
+M57 muestra el nombre corto de la cuenta (`name`) en las tarjetas y en el catálogo. Los nombres comercial y público continúan viajando solo como términos de búsqueda, para no mostrar etiquetas extensas ni perder coincidencias por marca.
+
 ## Archivos
 
 - `app/Http/Controllers/StorefrontController.php`

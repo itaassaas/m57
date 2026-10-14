@@ -277,6 +277,8 @@ class ExampleTest extends TestCase
             ->assertSee('Comprar ahora')
             ->assertSee('Guia de tallas')
             ->assertSee('Reseñas', false)
+            ->assertSee('pdp-color-dot--fallback', false)
+            ->assertSee('background-color: #4467c4', false)
             ->assertSee('Camiseta tejida manga corta con cuello en V para mujer');
     }
 
@@ -403,6 +405,15 @@ class ExampleTest extends TestCase
                     'price' => 28000,
                     'stock' => 9,
                     'image' => 'https://example.com/morado-l.webp',
+                ],
+                [
+                    'id' => 498,
+                    'sku' => 'CAMISETA-TEJIDA-MA-384855-05',
+                    'name' => 'Color: Azul · Talla: M',
+                    'attributes' => ['color' => 'Azul', 'Talla' => 'M'],
+                    'price' => 28000,
+                    'stock' => 8,
+                    'image' => null,
                 ],
             ],
         ];

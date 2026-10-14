@@ -9,23 +9,43 @@
         $soldCount = 920 + ($productId % 1800);
         $initialPrice = (float) data_get($productState, 'price', $product['price'] ?? 0);
         $colorMap = collect($product['variations'] ?? [])
-            ->groupBy(fn (array $variation) => data_get($variation, 'attributes.Color', 'Unico'))
+            ->groupBy(function (array $variation): string {
+                $color = collect((array) data_get($variation, 'attributes', []))
+                    ->first(fn (mixed $value, mixed $attribute) => mb_strtolower(trim((string) $attribute)) === 'color');
+
+                return filled($color) ? (string) $color : 'Unico';
+            })
             ->map(function ($items, $color) {
-                $first = collect($items)->first();
+                $colorName = trim((string) $color);
+                $normalizedColor = mb_strtolower($colorName);
+                $image = collect($items)
+                    ->pluck('image')
+                    ->filter(fn (mixed $image) => is_string($image) && trim($image) !== '')
+                    ->first();
+                $swatch = preg_match('/^#[0-9a-f]{3}(?:[0-9a-f]{3})?$/i', $colorName)
+                    ? $colorName
+                    : match (true) {
+                        str_contains($normalizedColor, 'negro') => '#1c1c1e',
+                        str_contains($normalizedColor, 'blanco') => '#f7f7f7',
+                        str_contains($normalizedColor, 'gris') => '#8d929b',
+                        str_contains($normalizedColor, 'beish'), str_contains($normalizedColor, 'beige') => '#d4c0a1',
+                        str_contains($normalizedColor, 'morado'), str_contains($normalizedColor, 'violeta'), str_contains($normalizedColor, 'lila') => '#8a63d2',
+                        str_contains($normalizedColor, 'azul'), str_contains($normalizedColor, 'celeste') => '#4467c4',
+                        str_contains($normalizedColor, 'rojo'), str_contains($normalizedColor, 'vino'), str_contains($normalizedColor, 'borgo') => '#b83e4b',
+                        str_contains($normalizedColor, 'verde'), str_contains($normalizedColor, 'menta') => '#6b9f73',
+                        str_contains($normalizedColor, 'amarillo'), str_contains($normalizedColor, 'mostaza') => '#e5b83d',
+                        str_contains($normalizedColor, 'naranja'), str_contains($normalizedColor, 'coral') => '#e57a45',
+                        str_contains($normalizedColor, 'rosado'), str_contains($normalizedColor, 'rosa'), str_contains($normalizedColor, 'fucsia') => '#dd7899',
+                        str_contains($normalizedColor, 'cafe'), str_contains($normalizedColor, 'café'), str_contains($normalizedColor, 'marron'), str_contains($normalizedColor, 'marrón') => '#7a5540',
+                        str_contains($normalizedColor, 'dorado'), str_contains($normalizedColor, 'oro') => '#c9a348',
+                        str_contains($normalizedColor, 'plateado'), str_contains($normalizedColor, 'plata') => '#b9bdc5',
+                        default => '#d7d7d9',
+                    };
 
                 return [
-                    'name' => $color,
-                    'image' => $first['image'] ?? null,
-                    'swatch' => match (mb_strtolower((string) $color)) {
-                        'negro' => '#1c1c1e',
-                        'blanco' => '#f7f7f7',
-                        'beish', 'beige' => '#d4c0a1',
-                        'morado' => '#8a63d2',
-                        'azul' => '#4467c4',
-                        'rojo' => '#cb4545',
-                        'verde' => '#6b9f73',
-                        default => '#d7d7d9',
-                    },
+                    'name' => $colorName,
+                    'image' => $image,
+                    'swatch' => $swatch,
                 ];
             })
             ->values()
@@ -313,6 +333,17 @@
             border-radius: 50%;
             border: 2px solid rgba(255,255,255,.9);
             box-shadow: 0 2px 8px rgba(0,0,0,.14);
+        }
+        .pdp-color-image--swatch {
+            display: grid;
+            place-items: center;
+        }
+        .pdp-color-dot--fallback {
+            position: static;
+            width: 42px;
+            height: 42px;
+            border-color: rgba(17,17,17,.16);
+            box-shadow: 0 3px 10px rgba(0,0,0,.16);
         }
         .pdp-color-name {
             font-size: 12px;
@@ -852,12 +883,16 @@
                                 class="pdp-color-btn {{ data_get($productState, 'color') === $color['name'] ? 'is-active' : '' }}"
                                 data-color="{{ $color['name'] }}"
                             >
-                                <span class="pdp-color-image">
-                                    @if($color['image'])
+                                @if($color['image'])
+                                    <span class="pdp-color-image">
                                         <img src="{{ $color['image'] }}" alt="{{ $color['name'] }}" loading="lazy">
+                                        <span class="pdp-color-dot" style="background-color: {{ $color['swatch'] }}"></span>
+                                    </span>
+                                @else
+                                    <span class="pdp-color-image pdp-color-image--swatch" aria-hidden="true">
+                                        <span class="pdp-color-dot pdp-color-dot--fallback" style="background-color: {{ $color['swatch'] }}"></span>
+                                    </span>
                                     @endif
-                                    <span class="pdp-color-dot" style="background: {{ $color['swatch'] }}"></span>
-                                </span>
                                 <span class="pdp-color-name">{{ $color['name'] }}</span>
                             </button>
                         @endforeach
