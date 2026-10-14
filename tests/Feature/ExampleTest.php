@@ -175,6 +175,44 @@ class ExampleTest extends TestCase
             ->assertDontSee('Soporte celular');
     }
 
+    public function test_search_includes_matching_products_curated_on_the_storefront(): void
+    {
+        $mock = Mockery::mock(HubMarketplaceApi::class);
+        $mock->shouldReceive('trackEvent')->byDefault();
+        $mock->shouldReceive('categories')->once()->andReturn([]);
+        $mock->shouldReceive('storefrontConfig')->once()->andReturn([]);
+        $mock->shouldReceive('allProducts')->once()->with(Mockery::on(fn (array $query) => (
+            ($query['q'] ?? null) === 'LUXURY'
+            && ($query['sort'] ?? null) === 'newest'
+        )))->andReturn([
+            'data' => [],
+            'meta' => ['total' => 0],
+        ]);
+        $mock->shouldReceive('storefrontHome')->once()->andReturn([
+            'sections' => [[
+                'items' => [[
+                    'id' => 77,
+                    'name' => 'LUXURY',
+                    'sku' => 'LUX-77',
+                    'price' => 99000,
+                    'stock' => 4,
+                    'image' => 'https://example.com/luxury.jpg',
+                    'owner' => ['id' => 10, 'name' => 'Tienda Demo'],
+                    'categories' => [['id' => 8, 'name' => 'Hogar']],
+                    'category_name' => 'Hogar',
+                ]],
+            ]],
+        ]);
+
+        $this->app->instance(HubMarketplaceApi::class, $mock);
+
+        $response = $this->get('/?q=LUXURY');
+
+        $response->assertOk()
+            ->assertSee('LUXURY')
+            ->assertDontSee('No hay productos para ese filtro');
+    }
+
     public function test_product_page_renders_redesigned_pdp(): void
     {
         $mock = Mockery::mock(HubMarketplaceApi::class);
@@ -228,6 +266,11 @@ class ExampleTest extends TestCase
 
     public function test_checkout_renders_redesigned_layout(): void
     {
+        $mock = Mockery::mock(HubMarketplaceApi::class);
+        $mock->shouldReceive('departments')->once()->andReturn([]);
+        $mock->shouldReceive('storefrontConfig')->once()->andReturn([]);
+        $this->app->instance(HubMarketplaceApi::class, $mock);
+
         $response = $this->withSession([
             'cart' => [
                 '1:0' => [

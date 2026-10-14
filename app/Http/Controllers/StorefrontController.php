@@ -132,8 +132,21 @@ class StorefrontController extends Controller
     {
         $page = max(1, $request->integer('page', 1));
         $perPage = 24;
+        $term = trim($request->string('q')->toString());
+
+        /*
+         * La portada puede contener productos escogidos desde el storefront de
+         * Hub. Esos productos no siempre aparecen en la respuesta paginada del
+         * catálogo. Para una búsqueda no se debe aplicar el filtro histórico de
+         * moda ni perder esos productos curados: se consultan ambas fuentes y
+         * se pagina el conjunto resultante localmente.
+         */
+        if ($term !== '') {
+            return $this->paginatedSearchProducts($request, $term, $page, $perPage);
+        }
+
         $source = $this->hub->products([
-            'q' => $request->string('q')->toString(),
+            'q' => '',
             'category' => $request->integer('category'),
             'sort' => $request->string('sort')->toString() ?: 'newest',
             'page' => $page,
@@ -155,6 +168,61 @@ class StorefrontController extends Controller
                 'last_page' => max($page, (int) ($meta['last_page'] ?? $page)),
             ],
         ];
+    }
+
+    private function paginatedSearchProducts(Request $request, string $term, int $page, int $perPage): array
+    {
+        $catalog = $this->hub->allProducts([
+            'q' => $term,
+            'category' => $request->integer('category'),
+            'sort' => $request->string('sort')->toString() ?: 'newest',
+        ]);
+        $storefront = $this->hub->storefrontHome();
+        $items = collect($catalog['data'] ?? [])
+            ->merge($this->matchingStorefrontProducts($storefront, $term))
+            ->filter(fn (array $product) => isset($product['id']))
+            ->unique('id')
+            ->values();
+        $total = $items->count();
+        $lastPage = max(1, (int) ceil($total / $perPage));
+
+        return [
+            'data' => $items->forPage(min($page, $lastPage), $perPage)->values()->all(),
+            'meta' => [
+                'page' => min($page, $lastPage),
+                'per_page' => $perPage,
+                'total' => $total,
+                'last_page' => $lastPage,
+            ],
+        ];
+    }
+
+    private function matchingStorefrontProducts(array $storefront, string $term)
+    {
+        $needle = $this->searchableText($term);
+
+        return collect($storefront['sections'] ?? [])
+            ->flatMap(fn (array $section) => $section['items'] ?? [])
+            ->filter(fn (mixed $item) => is_array($item) && isset($item['id']))
+            ->filter(function (array $product) use ($needle) {
+                $haystack = collect([
+                    $product['name'] ?? null,
+                    $product['sku'] ?? null,
+                    $product['description'] ?? null,
+                    $product['category_name'] ?? null,
+                    data_get($product, 'owner.name'),
+                ])->merge(collect($product['categories'] ?? [])->pluck('name'))
+                    ->filter()
+                    ->implode(' ');
+
+                return str_contains($this->searchableText($haystack), $needle);
+            })
+            ->values();
+    }
+
+    private function searchableText(string $value): string
+    {
+        return Str::of($value)->lower()->ascii()->squish()->value();
     }
 
     public function category(Request $request, int $categoryId): View
