@@ -295,7 +295,32 @@ class ExampleTest extends TestCase
             ->assertJsonPath('data.color', 'Morado')
             ->assertJsonPath('data.size', 'L')
             ->assertJsonPath('data.variation_id', 497)
+            ->assertJsonPath('data.media.0.src', 'https://example.com/morado-l-detail.webp')
             ->assertJsonPath('data.sku', 'CAMISETA-TEJIDA-MA-384855-04');
+    }
+
+    public function test_product_state_uses_only_the_size_when_a_legacy_variation_name_contains_color_and_size(): void
+    {
+        $product = $this->fakeVariableProduct();
+        $product['variations'][] = [
+            'id' => 499,
+            'sku' => 'CAMISETA-TEJIDA-MA-384855-06',
+            'name' => 'Color: Gris · Talla: S',
+            'attributes' => [],
+            'price' => 28000,
+            'stock' => 6,
+            'image' => null,
+        ];
+
+        $mock = Mockery::mock(HubMarketplaceApi::class);
+        $mock->shouldReceive('product')->once()->with(1917)->andReturn($product);
+        $this->app->instance(HubMarketplaceApi::class, $mock);
+
+        $this->getJson('/products/1917/state?variation_id=499')
+            ->assertOk()
+            ->assertJsonPath('data.color', 'Gris')
+            ->assertJsonPath('data.size', 'S')
+            ->assertJsonPath('data.sizes.0.name', 'S');
     }
 
     public function test_checkout_renders_redesigned_layout(): void
@@ -405,6 +430,10 @@ class ExampleTest extends TestCase
                     'price' => 28000,
                     'stock' => 9,
                     'image' => 'https://example.com/morado-l.webp',
+                    'images' => [
+                        'https://example.com/morado-l-detail.webp',
+                        'https://example.com/morado-l.webp',
+                    ],
                 ],
                 [
                     'id' => 498,

@@ -2,7 +2,7 @@
 
 **Fecha:** 14 de octubre de 2026  
 **Responsable:** ING Fernando Guzman  
-**Versión Hub:** `v1.0.0.0.8.5`
+**Versión Hub:** `v1.0.0.0.8.7`
 
 ## Comportamiento implementado
 
@@ -22,6 +22,14 @@ La ficha de producto agrupa las variaciones por el atributo cuyo nombre sea `Col
 ## Validación
 
 La prueba `test_product_page_renders_redesigned_pdp` agrega una variación con atributo `color: Azul` y sin imagen. Comprueba que el HTML incluya el modificador de círculo de respaldo y el color azul esperado.
+
+## Galería al seleccionar una variación
+
+Al elegir un color o una talla, M57 consulta el estado de la variación seleccionada y pone su galería propia antes que cualquier foto general. La imagen principal cambia inmediatamente a la primera foto de esa variación. Si no tiene fotos asignadas, la galería general del producto funciona como respaldo; el selector de color conserva el círculo visual.
+
+## Tallas compactas
+
+El selector se presenta como **Color** y después **Tallas**. Cada botón de talla contiene solo su valor (`S`, `M`, `L`, etc.). Como compatibilidad, una variación antigua llamada `Color: Gris · Talla: S` se interpreta internamente como color `Gris` y talla `S`.
 
 ## Riesgo remanente
 

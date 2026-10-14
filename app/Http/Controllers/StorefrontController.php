@@ -832,13 +832,21 @@ class StorefrontController extends Controller
     {
         $variations = collect($product['variations'] ?? []);
         $selected = $variation ?: $variations->firstWhere('stock', '>', 0) ?: $variations->first();
-        $selectedColor = data_get($selected, 'attributes.Color');
-        $selectedSize = data_get($selected, 'attributes.Talla');
+        $selectedColor = $this->variationAttribute($selected, 'color');
+        $selectedSize = $this->variationAttribute($selected, 'talla');
         $price = (float) ($selected['price'] ?? $product['price'] ?? 0);
         $oldPrice = round($price * 1.18, 0);
-        $media = collect([$selected['image'] ?? null])
+        // La galería propia de la variación debe aparecer primero: así, al escoger
+        // color/talla, la imagen principal cambia a la referencia seleccionada.
+        $variationMedia = collect($selected['images'] ?? [])
+            ->filter();
+
+        if ($variationMedia->isEmpty()) {
+            $variationMedia->push($selected['image'] ?? null);
+        }
+
+        $media = $variationMedia
             ->merge($product['images'] ?? [])
-            ->merge($variations->pluck('image'))
             ->filter()
             ->unique()
             ->values()
@@ -849,10 +857,10 @@ class StorefrontController extends Controller
             ->all();
 
         $sizes = $variations
-            ->filter(fn (array $item) => data_get($item, 'attributes.Color') === $selectedColor)
+            ->filter(fn (array $item) => $this->variationAttribute($item, 'color') === $selectedColor)
             ->values()
             ->map(fn (array $item) => [
-                'name' => (string) data_get($item, 'attributes.Talla', $item['name']),
+                'name' => (string) ($this->variationAttribute($item, 'talla') ?? $item['name']),
                 'variation_id' => (int) $item['id'],
                 'stock' => (int) ($item['stock'] ?? 0),
                 'status' => (int) ($item['stock'] ?? 0) < 1 ? 'soldout' : ((int) ($item['stock'] ?? 0) < 4 ? 'low' : 'available'),
@@ -885,10 +893,37 @@ class StorefrontController extends Controller
         }
 
         $filtered = $variations
-            ->when($color, fn ($items) => $items->filter(fn (array $item) => data_get($item, 'attributes.Color') === $color))
-            ->when($size, fn ($items) => $items->filter(fn (array $item) => data_get($item, 'attributes.Talla') === $size));
+            ->when($color, fn ($items) => $items->filter(fn (array $item) => $this->variationAttribute($item, 'color') === $color))
+            ->when($size, fn ($items) => $items->filter(fn (array $item) => $this->variationAttribute($item, 'talla') === $size));
 
         return $filtered->firstWhere('stock', '>', 0) ?: $filtered->first();
+    }
+
+    private function variationAttribute(?array $variation, string $name): mixed
+    {
+        $aliases = match (mb_strtolower($name)) {
+            'color' => ['color', 'colour'],
+            'talla' => ['talla', 'size'],
+            default => [mb_strtolower($name)],
+        };
+
+        foreach ((array) ($variation['attributes'] ?? []) as $attribute => $value) {
+            if (in_array(mb_strtolower(trim((string) $attribute)), $aliases, true)) {
+                return $value;
+            }
+        }
+
+        // Compatibilidad con variaciones antiguas cuyo único dato legible es
+        // "Color: Gris · Talla: S". La interfaz nunca debe usar esa cadena
+        // completa como etiqueta de una talla.
+        $variationName = (string) ($variation['name'] ?? '');
+        foreach ($aliases as $alias) {
+            if (preg_match('/(?:^|[·|,;]\s*)'.preg_quote($alias, '/').'\s*:\s*([^·|,;]+)/iu', $variationName, $matches)) {
+                return trim($matches[1]);
+            }
+        }
+
+        return null;
     }
 
     private function recommendedProducts(array $product): array
