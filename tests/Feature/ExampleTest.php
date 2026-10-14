@@ -8,6 +8,24 @@ use Tests\TestCase;
 
 class ExampleTest extends TestCase
 {
+    public function test_store_search_redirects_to_its_category_with_products_limited_to_that_store(): void
+    {
+        $mock = Mockery::mock(HubMarketplaceApi::class);
+        $mock->shouldReceive('allProducts')->once()->withNoArgs()->andReturn([
+            'data' => [[
+                'id' => 901,
+                'name' => 'Producto de marca',
+                'owner' => ['id' => 77, 'name' => 'Cannabs Natural Fashion'],
+                'categories' => [['id' => 14, 'name' => 'Moda']],
+            ]],
+        ]);
+
+        $this->app->instance(HubMarketplaceApi::class, $mock);
+
+        $this->get('/?q=cannabis')
+            ->assertRedirect(route('categories.show', ['categoryId' => 14, 'store' => 77]));
+    }
+
     public function test_home_renders_marketplace_products(): void
     {
         $mock = Mockery::mock(HubMarketplaceApi::class);
@@ -190,6 +208,9 @@ class ExampleTest extends TestCase
     {
         $mock = Mockery::mock(HubMarketplaceApi::class);
         $mock->shouldReceive('trackEvent')->byDefault();
+        $mock->shouldReceive('allProducts')->once()->withNoArgs()->andReturn([
+            'data' => [],
+        ]);
         $mock->shouldReceive('categories')->once()->andReturn([]);
         $mock->shouldReceive('storefrontConfig')->once()->andReturn([]);
         $mock->shouldReceive('storefrontHome')->once()->ordered('search-sources')->andReturn([

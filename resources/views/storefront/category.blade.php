@@ -395,6 +395,9 @@
 
         <section class="plp-hero">
             <h1 class="plp-title">{{ $category['name'] }}</h1>
+            @if($storeName)
+                <p class="mini">Productos de <strong>{{ $storeName }}</strong></p>
+            @endif
             <div class="plp-meta">
                 <strong data-plp-total>{{ number_format((int) ($meta['total'] ?? 0), 0, ',', '.') }}</strong>
                 <span>productos</span>
@@ -686,6 +689,9 @@
                         sort: ui.sort,
                         q: ui.q,
                     });
+                    if (initialFilters.store) {
+                        params.set('store', initialFilters.store);
+                    }
                     const response = await fetch(`${productsUrl}?${params.toString()}`, { headers: { Accept: 'application/json' } });
                     const payload = await response.json();
                     const nextProducts = Array.isArray(payload.data) ? payload.data : [];

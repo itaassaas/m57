@@ -28,6 +28,12 @@ En consecuencia, un producto curado y visible en M57, pero no presente en la res
 
 La validación pública posterior detectó que una búsqueda podía continuar vacía aunque el mismo producto estuviera visible en inicio. La consulta de catálogo se ejecutaba antes de obtener la instantánea curada de la portada. Ahora M57 obtiene primero esa instantánea y la reutiliza como fuente prioritaria de la búsqueda; el catálogo complementa los resultados y no puede hacer desaparecer los productos ya visibles para el visitante.
 
+## Búsqueda por empresa o marca
+
+El buscador también reconoce la empresa que publica los productos. Cuando el término identifica una sola marca, M57 abre la categoría principal de esa tienda y añade un filtro interno de empresa, para que la persona vea solo ese catálogo. La comparación normaliza mayúsculas, tildes y tolera un error corto de escritura; por ejemplo, `cannabis` identifica `Cannabs Natural Fashion` y abre su categoría principal, como `/categories/14?store=ID`.
+
+Hub aplica el filtro `owner_user_id` antes de entregar los productos y continúa aplicando las reglas de visibilidad, disponibilidad y categoría pública. Por tanto, el parámetro no permite consultar productos que no estén publicados en M57.
+
 ## Archivos
 
 - `app/Http/Controllers/StorefrontController.php`
@@ -35,7 +41,7 @@ La validación pública posterior detectó que una búsqueda podía continuar va
 
 ## Prueba de regresión
 
-La prueba `test_search_includes_matching_products_curated_on_the_storefront` simula el caso crítico: el catálogo responde vacío y un producto `LUXURY` existe en una sección curada. El resultado debe mostrar el producto, no el estado vacío.
+La prueba `test_search_includes_matching_products_curated_on_the_storefront` simula el caso crítico: el catálogo responde vacío y un producto `LUXURY` existe en una sección curada. El resultado debe mostrar el producto, no el estado vacío. La prueba `test_store_search_redirects_to_its_category_with_products_limited_to_that_store` cubre la búsqueda de marca, su tolerancia de escritura y la redirección al catálogo limitado a esa empresa.
 
 ## Despliegue M57
 

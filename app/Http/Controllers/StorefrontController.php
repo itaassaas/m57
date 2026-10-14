@@ -20,10 +20,17 @@ class StorefrontController extends Controller
         private readonly HubMarketplaceApi $hub
     ) {}
 
-    public function index(Request $request): View
+    public function index(Request $request): View|RedirectResponse
     {
         if ($request->integer('category') > 0) {
             return $this->category($request, $request->integer('category'));
+        }
+
+        if ($destination = $this->matchingStoreSearchDestination($request)) {
+            return redirect()->route('categories.show', [
+                'categoryId' => $destination['category_id'],
+                'store' => $destination['owner_id'],
+            ]);
         }
 
         $categories = $this->hub->categories();
@@ -228,6 +235,67 @@ class StorefrontController extends Controller
         return Str::of($value)->lower()->ascii()->squish()->value();
     }
 
+    /**
+     * Cuando la consulta identifica una sola marca, se prioriza la navegación
+     * a su categoría principal con el catálogo limitado a esa empresa.
+     */
+    private function matchingStoreSearchDestination(Request $request): ?array
+    {
+        $term = trim($request->string('q')->toString());
+        if ($term === '') {
+            return null;
+        }
+
+        // Se consulta el catálogo visible completo porque la tolerancia de
+        // escritura ("cannabis" vs. "cannabs") no puede delegarse a LIKE.
+        $matches = collect($this->hub->allProducts()['data'] ?? [])
+            ->filter(fn (array $product) => $this->matchesStoreSearch(
+                (string) data_get($product, 'owner.name'),
+                $term
+            ))
+            ->groupBy(fn (array $product) => (int) data_get($product, 'owner.id', 0))
+            ->filter(fn ($products, int $ownerId) => $ownerId > 0 && $products->isNotEmpty());
+
+        if ($matches->count() !== 1) {
+            return null;
+        }
+
+        $ownerId = (int) $matches->keys()->first();
+        $categoryId = (int) data_get($matches->first()->first(), 'categories.0.id', 0);
+
+        return $categoryId > 0
+            ? ['owner_id' => $ownerId, 'category_id' => $categoryId]
+            : null;
+    }
+
+    private function matchesStoreSearch(string $storeName, string $term): bool
+    {
+        $storeName = $this->searchableText($storeName);
+        $term = $this->searchableText($term);
+
+        if ($storeName === '' || $term === '') {
+            return false;
+        }
+
+        if (str_contains($storeName, $term)) {
+            return true;
+        }
+
+        $length = strlen($term);
+        if ($length < 4 || strlen($storeName) < $length) {
+            return false;
+        }
+
+        $maximumDistance = min(3, max(1, (int) floor($length * 0.25)));
+        for ($offset = 0; $offset <= strlen($storeName) - $length; $offset++) {
+            if (levenshtein($term, substr($storeName, $offset, $length)) <= $maximumDistance) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function category(Request $request, int $categoryId): View
     {
         $categories = collect($this->hub->categories());
@@ -235,9 +303,11 @@ class StorefrontController extends Controller
         abort_if(! $category, 404);
 
         $sort = $request->string('sort')->toString() ?: 'newest';
+        $ownerUserId = $request->integer('store');
         $products = $this->hub->products([
-            'q' => $request->string('q')->toString(),
+            'q' => $ownerUserId > 0 ? '' : $request->string('q')->toString(),
             'category' => $categoryId,
+            'owner_user_id' => $ownerUserId,
             'sort' => $sort,
             'page' => max(1, $request->integer('page', 1)),
             'per_page' => 24,
@@ -252,9 +322,11 @@ class StorefrontController extends Controller
             'meta' => $products['meta'] ?? [],
             'cartCount' => $this->cartCount(),
             'filters' => [
-                'q' => $request->string('q')->toString(),
+                'q' => $ownerUserId > 0 ? '' : $request->string('q')->toString(),
                 'sort' => $sort,
+                'store' => $ownerUserId,
             ],
+            'storeName' => $ownerUserId > 0 ? data_get($initialProducts->first(), 'owner.name') : null,
             'filterFacets' => [
                 'sizes' => $initialProducts->pluck('sizes')->flatten()->filter()->unique()->sort()->values()->all(),
                 'colors' => $initialProducts->pluck('colors')->flatten()->filter()->unique()->values()->all(),
@@ -267,9 +339,12 @@ class StorefrontController extends Controller
 
     public function categoryProducts(Request $request, int $categoryId): JsonResponse
     {
+        $ownerUserId = $request->integer('store');
+
         return response()->json($this->hub->products([
-            'q' => $request->string('q')->toString(),
+            'q' => $ownerUserId > 0 ? '' : $request->string('q')->toString(),
             'category' => $categoryId,
+            'owner_user_id' => $ownerUserId,
             'sort' => $request->string('sort')->toString() ?: 'newest',
             'page' => max(1, $request->integer('page', 1)),
             'per_page' => 24,
