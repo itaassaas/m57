@@ -841,6 +841,23 @@ class StorefrontController extends Controller
         $variationMedia = collect($selected['images'] ?? [])
             ->filter();
 
+        // Una foto asociada al color debe servir para todas sus tallas. La
+        // asignación se guarda una vez, en una variación representativa, pero
+        // se reutiliza cuando el visitante elige otra talla del mismo color.
+        if ($variationMedia->isEmpty() && filled($selectedColor)) {
+            $variationMedia = $variations
+                ->filter(fn (array $item) => $this->variationAttribute($item, 'color') === $selectedColor)
+                ->flatMap(fn (array $item) => $item['images'] ?? [])
+                ->filter();
+        }
+
+        if ($variationMedia->isEmpty() && filled($selectedSize)) {
+            $variationMedia = $variations
+                ->filter(fn (array $item) => $this->variationAttribute($item, 'talla') === $selectedSize)
+                ->flatMap(fn (array $item) => $item['images'] ?? [])
+                ->filter();
+        }
+
         if ($variationMedia->isEmpty()) {
             $variationMedia->push($selected['image'] ?? null);
         }

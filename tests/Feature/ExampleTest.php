@@ -299,6 +299,22 @@ class ExampleTest extends TestCase
             ->assertJsonPath('data.sku', 'CAMISETA-TEJIDA-MA-384855-04');
     }
 
+    public function test_product_state_reuses_an_image_assigned_to_the_same_color(): void
+    {
+        $product = $this->fakeVariableProduct();
+        $product['variations'][2]['image'] = null;
+        $product['variations'][2]['images'] = [];
+
+        $mock = Mockery::mock(HubMarketplaceApi::class);
+        $mock->shouldReceive('product')->once()->with(1917)->andReturn($product);
+        $this->app->instance(HubMarketplaceApi::class, $mock);
+
+        $this->getJson('/products/1917/state?color=Morado&size=M')
+            ->assertOk()
+            ->assertJsonPath('data.variation_id', 496)
+            ->assertJsonPath('data.media.0.src', 'https://example.com/morado-l-detail.webp');
+    }
+
     public function test_product_state_uses_only_the_size_when_a_legacy_variation_name_contains_color_and_size(): void
     {
         $product = $this->fakeVariableProduct();
