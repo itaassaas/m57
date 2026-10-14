@@ -313,12 +313,23 @@
             gap: 20px;
             overflow: hidden;
         }
+        .hero-slide-background {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: .34;
+            pointer-events: none;
+        }
         .hero-slide::before,
         .hero-slide::after {
             content: "";
             position: absolute;
             border-radius: 999px;
             pointer-events: none;
+            z-index: 1;
         }
         .hero-slide::before {
             width: 340px;
@@ -381,7 +392,7 @@
         }
         .hero-slide-copy {
             position: relative;
-            z-index: 1;
+            z-index: 2;
             color: #fff;
             display: flex;
             flex-direction: column;
@@ -437,7 +448,7 @@
         }
         .hero-slide-products {
             position: relative;
-            z-index: 1;
+            z-index: 2;
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 20px;

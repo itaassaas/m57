@@ -13,7 +13,16 @@ class ExampleTest extends TestCase
         $mock = Mockery::mock(HubMarketplaceApi::class);
         $mock->shouldReceive('trackEvent')->byDefault();
         $mock->shouldReceive('storefrontHome')->once()->andReturn([]);
-        $mock->shouldReceive('storefrontConfig')->once()->andReturn([]);
+        $mock->shouldReceive('storefrontConfig')->once()->andReturn([
+            'hero' => [
+                'image_url' => 'https://example.com/m57-hero.jpg',
+            ],
+            'visual_categories' => [
+                'images' => [
+                    'Moda' => 'https://example.com/m57-category-moda.jpg',
+                ],
+            ],
+        ]);
         $mock->shouldReceive('products')->once()->with(Mockery::on(fn (array $query) => (
             ($query['page'] ?? null) === 1
             && ($query['per_page'] ?? null) === 72
@@ -101,6 +110,8 @@ class ExampleTest extends TestCase
             ->assertSee('Vestido prueba')
             ->assertSee('Bolso visual')
             ->assertSee('Hub Demo')
+            ->assertSee('https://example.com/m57-hero.jpg')
+            ->assertSee('https://example.com/m57-category-moda.jpg')
             ->assertSee('<div class="category-name">Moda</div>', false)
             ->assertSee('<div class="category-name">Tecnología</div>', false)
             ->assertDontSee('<div class="category-name">Curvy</div>', false)
@@ -181,14 +192,7 @@ class ExampleTest extends TestCase
         $mock->shouldReceive('trackEvent')->byDefault();
         $mock->shouldReceive('categories')->once()->andReturn([]);
         $mock->shouldReceive('storefrontConfig')->once()->andReturn([]);
-        $mock->shouldReceive('allProducts')->once()->with(Mockery::on(fn (array $query) => (
-            ($query['q'] ?? null) === 'LUXURY'
-            && ($query['sort'] ?? null) === 'newest'
-        )))->andReturn([
-            'data' => [],
-            'meta' => ['total' => 0],
-        ]);
-        $mock->shouldReceive('storefrontHome')->once()->andReturn([
+        $mock->shouldReceive('storefrontHome')->once()->ordered('search-sources')->andReturn([
             'sections' => [[
                 'items' => [[
                     'id' => 77,
@@ -202,6 +206,13 @@ class ExampleTest extends TestCase
                     'category_name' => 'Hogar',
                 ]],
             ]],
+        ]);
+        $mock->shouldReceive('allProducts')->once()->ordered('search-sources')->with(Mockery::on(fn (array $query) => (
+            ($query['q'] ?? null) === 'LUXURY'
+            && ($query['sort'] ?? null) === 'newest'
+        )))->andReturn([
+            'data' => [],
+            'meta' => ['total' => 0],
         ]);
 
         $this->app->instance(HubMarketplaceApi::class, $mock);

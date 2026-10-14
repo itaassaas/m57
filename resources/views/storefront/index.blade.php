@@ -27,6 +27,7 @@
                 'cta_href' => '#catalogo',
                 'cta_variant' => 'light',
                 'theme' => 'midnight',
+                'image_url' => data_get($heroConfig, 'image_url'),
                 'products' => $allProducts->take(4),
             ],
             [
@@ -37,6 +38,7 @@
                 'cta_href' => '#catalogo',
                 'cta_variant' => 'ghost',
                 'theme' => 'summer',
+                'image_url' => null,
                 'products' => $allProducts->slice(4, 4),
             ],
         ];
@@ -216,6 +218,9 @@
             <div class="hero-carousel-track" data-hero-track>
                 @foreach($heroSlides as $slide)
                     <article class="hero-slide hero-slide-{{ $slide['theme'] }}" data-hero-bg="{{ $slide['theme'] === 'summer' ? '#ff8a65' : '#0f172a' }}">
+                        @if(filled($slide['image_url'] ?? null))
+                            <img class="hero-slide-background" src="{{ $slide['image_url'] }}" alt="" aria-hidden="true" fetchpriority="high">
+                        @endif
                         <div class="hero-slide-copy">
                             <span class="hero-slide-badge">{{ $slide['badge'] }}</span>
                             <h1 class="hero-slide-title">{!! nl2br(e($slide['title'])) !!}</h1>

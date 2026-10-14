@@ -24,6 +24,10 @@ En consecuencia, un producto curado y visible en M57, pero no presente en la res
 - Elimina duplicados por ID y pagina el resultado combinado.
 - Mantiene el filtro de moda solo para la exploración normal de la portada, sin afectar una búsqueda solicitada por el usuario.
 
+## Ajuste posterior de producción
+
+La validación pública posterior detectó que una búsqueda podía continuar vacía aunque el mismo producto estuviera visible en inicio. La consulta de catálogo se ejecutaba antes de obtener la instantánea curada de la portada. Ahora M57 obtiene primero esa instantánea y la reutiliza como fuente prioritaria de la búsqueda; el catálogo complementa los resultados y no puede hacer desaparecer los productos ya visibles para el visitante.
+
 ## Archivos
 
 - `app/Http/Controllers/StorefrontController.php`

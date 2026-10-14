@@ -172,12 +172,15 @@ class StorefrontController extends Controller
 
     private function paginatedSearchProducts(Request $request, string $term, int $page, int $perPage): array
     {
+        // La portada es la fuente que el visitante acaba de ver. Se carga antes
+        // del catálogo para que una búsqueda siempre conserve sus productos
+        // curados, incluso si la respuesta de catálogo no los incluye.
+        $storefront = $this->hub->storefrontHome();
         $catalog = $this->hub->allProducts([
             'q' => $term,
             'category' => $request->integer('category'),
             'sort' => $request->string('sort')->toString() ?: 'newest',
         ]);
-        $storefront = $this->hub->storefrontHome();
         $items = collect($catalog['data'] ?? [])
             ->merge($this->matchingStorefrontProducts($storefront, $term))
             ->filter(fn (array $product) => isset($product['id']))
