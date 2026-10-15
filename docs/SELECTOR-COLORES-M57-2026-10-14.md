@@ -37,6 +37,10 @@ Como capa final de seguridad, el navegador limpia las etiquetas de talla antes d
 
 Las claves plurales `TALLAS` y `SIZES` también son válidas; `TALLAS: 28 · COLOR: CLARO` se muestra como talla `28` después de seleccionar CLARO.
 
+## Guía de tallas
+
+El botón de guía abre una vista previa del documento `public/assets/guia-tallas.pdf`, con opción de abrirlo o descargarlo. El PDF conserva sus dos páginas y no se convierte en imágenes, para mantener legibilidad al ampliar.
+
 ## Riesgo remanente
 
 La conversión semántica depende de que el atributo contenga un nombre de color comprensible o un hexadecimal. Para tonos comerciales no estándar se mostrará el gris neutro hasta que se agregue su equivalencia al catálogo de colores.

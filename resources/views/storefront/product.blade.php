@@ -725,6 +725,53 @@
             border: 1px solid rgba(17,17,17,.08);
             background: rgba(255,255,255,.92);
         }
+        .pdp-size-guide-dialog {
+            width: min(920px, calc(100vw - 24px));
+            max-height: min(90svh, 920px);
+            border: 0;
+            padding: 0;
+            border-radius: 24px;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0 26px 60px rgba(17,17,17,.25);
+        }
+        .pdp-size-guide-dialog::backdrop {
+            background: rgba(17,17,17,.46);
+            backdrop-filter: blur(4px);
+        }
+        .pdp-size-guide-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 18px 22px;
+            border-bottom: 1px solid #ececf0;
+        }
+        .pdp-size-guide-title {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 850;
+            letter-spacing: -.03em;
+        }
+        .pdp-size-guide-copy {
+            margin: 3px 0 0;
+            color: #71717a;
+            font-size: 13px;
+        }
+        .pdp-size-guide-frame {
+            display: block;
+            width: 100%;
+            height: min(68svh, 720px);
+            border: 0;
+            background: #f6f6f8;
+        }
+        .pdp-size-guide-footer {
+            display: flex;
+            justify-content: flex-end;
+            padding: 14px 22px;
+            border-top: 1px solid #ececf0;
+            background: #fcfcfd;
+        }
         @media (hover: hover) and (pointer: fine) {
             .pdp-stage:hover .pdp-stage-media img {
                 --zoom-scale: 1.14;
@@ -786,6 +833,16 @@
             .pdp-benefits,
             .pdp-dialog-grid {
                 grid-template-columns: 1fr;
+            }
+            .pdp-size-guide-dialog {
+                width: min(100vw - 16px, 920px);
+                border-radius: 18px;
+            }
+            .pdp-size-guide-head {
+                padding: 16px 18px;
+            }
+            .pdp-size-guide-frame {
+                height: 68svh;
             }
             .pdp-review-card {
                 grid-template-columns: 1fr;
@@ -923,7 +980,7 @@
             <div class="pdp-section">
                 <div class="pdp-section-head">
                     <h2 class="pdp-section-title">Tallas</h2>
-                    <button type="button" class="pdp-guide-btn">Guia de tallas</button>
+                    <button type="button" class="pdp-guide-btn" data-size-guide>Guia de tallas</button>
                 </div>
                 <div class="pdp-size-grid" data-size-grid>
                     @foreach(data_get($productState, 'sizes', []) as $size)
@@ -1158,6 +1215,20 @@
         </div>
     </dialog>
 
+    <dialog class="pdp-size-guide-dialog" data-size-guide-dialog aria-labelledby="size-guide-title">
+        <div class="pdp-size-guide-head">
+            <div>
+                <h2 class="pdp-size-guide-title" id="size-guide-title">Guía de tallas</h2>
+                <p class="pdp-size-guide-copy">Consulta las medidas y cómo tomar cada referencia.</p>
+            </div>
+            <button type="button" class="pdp-dialog-close" data-size-guide-close aria-label="Cerrar guía de tallas">×</button>
+        </div>
+        <iframe class="pdp-size-guide-frame" src="{{ asset('assets/guia-tallas.pdf') }}#view=FitH" title="Vista previa de la guía de tallas"></iframe>
+        <div class="pdp-size-guide-footer">
+            <a class="pdp-btn secondary" href="{{ asset('assets/guia-tallas.pdf') }}" target="_blank" rel="noopener">Abrir o descargar PDF</a>
+        </div>
+    </dialog>
+
     <script>
         (() => {
             const stateUrl = @json(route('products.state', $product['id']));
@@ -1384,6 +1455,13 @@
             document.querySelector('[data-quick-view-close]')?.addEventListener('click', () => dialog.close());
             dialog?.addEventListener('click', (event) => {
                 if (event.target === dialog) dialog.close();
+            });
+
+            const sizeGuideDialog = document.querySelector('[data-size-guide-dialog]');
+            document.querySelector('[data-size-guide]')?.addEventListener('click', () => sizeGuideDialog?.showModal());
+            document.querySelector('[data-size-guide-close]')?.addEventListener('click', () => sizeGuideDialog?.close());
+            sizeGuideDialog?.addEventListener('click', (event) => {
+                if (event.target === sizeGuideDialog) sizeGuideDialog.close();
             });
 
             const reviewList = document.querySelector('[data-review-list]');
