@@ -363,6 +363,30 @@ class ExampleTest extends TestCase
             ->assertJsonPath('data.sizes.0.name', '36');
     }
 
+    public function test_product_state_supports_the_plural_tallas_attribute(): void
+    {
+        $product = $this->fakeVariableProduct();
+        $product['variations'][] = [
+            'id' => 501,
+            'sku' => 'CAMISETA-TEJIDA-MA-384855-08',
+            'name' => 'TALLAS: 28 · COLOR: CLARO',
+            'attributes' => ['TALLAS' => '28', 'COLOR' => 'CLARO'],
+            'price' => 28000,
+            'stock' => 6,
+            'image' => null,
+        ];
+
+        $mock = Mockery::mock(HubMarketplaceApi::class);
+        $mock->shouldReceive('product')->once()->with(1917)->andReturn($product);
+        $this->app->instance(HubMarketplaceApi::class, $mock);
+
+        $this->getJson('/products/1917/state?variation_id=501')
+            ->assertOk()
+            ->assertJsonPath('data.color', 'CLARO')
+            ->assertJsonPath('data.size', '28')
+            ->assertJsonPath('data.sizes.0.name', '28');
+    }
+
     public function test_checkout_renders_redesigned_layout(): void
     {
         $mock = Mockery::mock(HubMarketplaceApi::class);

@@ -920,7 +920,7 @@ class StorefrontController extends Controller
     {
         $aliases = match (mb_strtolower($name)) {
             'color' => ['color', 'colour'],
-            'talla' => ['talla', 'size'],
+            'talla' => ['talla', 'tallas', 'size', 'sizes'],
             default => [mb_strtolower($name)],
         };
 
@@ -935,7 +935,7 @@ class StorefrontController extends Controller
         // completa como etiqueta de una talla.
         $variationName = (string) ($variation['name'] ?? '');
         foreach ($aliases as $alias) {
-            $pattern = '/(?:^|[·|,;\s])'.preg_quote($alias, '/').'\s*:\s*(.+?)(?=\s+(?:color|colour|talla|size)\s*:|[·|,;]|$)/iu';
+            $pattern = '/(?:^|[·|,;\s])'.preg_quote($alias, '/').'\s*:\s*(.+?)(?=\s+(?:color|colour|talla|tallas|size|sizes)\s*:|[·|,;]|$)/iu';
             if (preg_match($pattern, $variationName, $matches)) {
                 return trim($matches[1]);
             }

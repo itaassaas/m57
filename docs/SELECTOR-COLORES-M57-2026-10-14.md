@@ -2,7 +2,7 @@
 
 **Fecha:** 14 de octubre de 2026  
 **Responsable:** ING Fernando Guzman  
-**Versión Hub:** `v1.0.0.0.9.3`
+**Versión Hub:** `v1.0.0.0.9.4`
 
 ## Comportamiento implementado
 
@@ -34,6 +34,8 @@ El selector se presenta como **Color** y después **Tallas**. Cada botón de tal
 También se admite el formato legado sin separador, como `Talla: 36 Color: Gris`; tras elegir Gris, se muestra solo `36` en el selector de tallas.
 
 Como capa final de seguridad, el navegador limpia las etiquetas de talla antes de renderizarlas; nunca debe presentarse el texto completo de una variación dentro del botón de tallas.
+
+Las claves plurales `TALLAS` y `SIZES` también son válidas; `TALLAS: 28 · COLOR: CLARO` se muestra como talla `28` después de seleccionar CLARO.
 
 ## Riesgo remanente
 

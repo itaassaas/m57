@@ -11,7 +11,7 @@
         $variationAttribute = function (array $variation, string $name): ?string {
             $aliases = match (mb_strtolower($name)) {
                 'color' => ['color', 'colour'],
-                'talla' => ['talla', 'size'],
+                'talla' => ['talla', 'tallas', 'size', 'sizes'],
                 default => [mb_strtolower($name)],
             };
 
@@ -23,7 +23,7 @@
 
             $variationName = (string) ($variation['name'] ?? '');
             foreach ($aliases as $alias) {
-                $pattern = '/(?:^|[·|,;\\s])'.preg_quote($alias, '/').'\\s*:\\s*(.+?)(?=\\s+(?:color|colour|talla|size)\\s*:|[·|,;]|$)/iu';
+                $pattern = '/(?:^|[·|,;\\s])'.preg_quote($alias, '/').'\\s*:\\s*(.+?)(?=\\s+(?:color|colour|talla|tallas|size|sizes)\\s*:|[·|,;]|$)/iu';
                 if (preg_match($pattern, $variationName, $matches)) {
                     return trim($matches[1]);
                 }
@@ -929,7 +929,7 @@
                     @foreach(data_get($productState, 'sizes', []) as $size)
                         @php
                             $sizeLabel = (string) $size['name'];
-                            if (preg_match('/(?:talla|size)\s*:\s*(.+?)(?=\s*(?:color|colour|talla|size)\s*:|[·|,;\-–—\/]|$)/iu', $sizeLabel, $sizeMatches)) {
+                            if (preg_match('/(?:talla|tallas|size|sizes)\s*:\s*(.+?)(?=\s*(?:color|colour|talla|tallas|size|sizes)\s*:|[·|,;\-–—\/]|$)/iu', $sizeLabel, $sizeMatches)) {
                                 $sizeLabel = trim($sizeMatches[1]);
                             }
                         @endphp
@@ -1183,7 +1183,7 @@
             const money = (value) => new Intl.NumberFormat('es-CO').format(Math.round(value || 0));
             const sizeLabel = (value) => {
                 const text = String(value || '');
-                const match = text.match(/(?:talla|size)\s*:\s*(.+?)(?=\s*(?:color|colour|talla|size)\s*:|[·|,;\-–—]|$)/i);
+                const match = text.match(/(?:talla|tallas|size|sizes)\s*:\s*(.+?)(?=\s*(?:color|colour|talla|tallas|size|sizes)\s*:|[·|,;\-–—]|$)/i);
 
                 return match ? match[1].trim() : text;
             };
