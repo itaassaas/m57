@@ -927,6 +927,12 @@
                 </div>
                 <div class="pdp-size-grid" data-size-grid>
                     @foreach(data_get($productState, 'sizes', []) as $size)
+                        @php
+                            $sizeLabel = (string) $size['name'];
+                            if (preg_match('/(?:talla|size)\s*:\s*(.+?)(?=\s*(?:color|colour|talla|size)\s*:|[·|,;\-–—\/]|$)/iu', $sizeLabel, $sizeMatches)) {
+                                $sizeLabel = trim($sizeMatches[1]);
+                            }
+                        @endphp
                         <button
                             type="button"
                             class="pdp-size-btn {{ $size['selected'] ? 'is-active' : '' }} {{ $size['status'] === 'soldout' ? 'is-soldout' : '' }}"
@@ -934,7 +940,7 @@
                             data-variation-id="{{ $size['variation_id'] }}"
                             @disabled($size['status'] === 'soldout')
                         >
-                            <span class="pdp-size-name">{{ $size['name'] }}</span>
+                            <span class="pdp-size-name">{{ $sizeLabel }}</span>
                             <span class="pdp-size-stock">
                                 {{ $size['status'] === 'soldout' ? 'Agotado' : ($size['status'] === 'low' ? 'Pocas unidades' : 'Disponible') }}
                             </span>
@@ -1175,6 +1181,12 @@
             let currentMediaIndex = 0;
 
             const money = (value) => new Intl.NumberFormat('es-CO').format(Math.round(value || 0));
+            const sizeLabel = (value) => {
+                const text = String(value || '');
+                const match = text.match(/(?:talla|size)\s*:\s*(.+?)(?=\s*(?:color|colour|talla|size)\s*:|[·|,;\-–—]|$)/i);
+
+                return match ? match[1].trim() : text;
+            };
 
             const removeLoading = (target) => target.closest('[data-media-shell]')?.classList.remove('is-loading');
 
@@ -1228,7 +1240,7 @@
                         data-variation-id="${item.variation_id}"
                         ${item.status === 'soldout' ? 'disabled' : ''}
                     >
-                        <span class="pdp-size-name">${item.name}</span>
+                        <span class="pdp-size-name">${sizeLabel(item.name)}</span>
                         <span class="pdp-size-stock">${item.status === 'soldout' ? 'Agotado' : item.status === 'low' ? 'Pocas unidades' : 'Disponible'}</span>
                     </button>
                 `).join('');
