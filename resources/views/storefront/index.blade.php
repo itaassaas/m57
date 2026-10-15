@@ -77,7 +77,17 @@
         $visibleCategoryTiles = $hasVisualCategoryConfiguration
             ? $availableCategories
                 ->filter(fn (array $category) => $visualCategoryOrder->has((int) ($category['id'] ?? 0)))
-                ->sortBy(fn (array $category) => (int) data_get($visualCategoryOrder->get((int) $category['id']), 'sort_order', 0))
+                ->map(function (array $category, int $index) use ($visualCategoryOrder) {
+                    $sortOrder = (int) data_get($visualCategoryOrder->get((int) $category['id']), 'sort_order', 0);
+
+                    return [
+                        'category' => $category,
+                        // 1 es la mayor prioridad; 0 conserva el orden normal al final.
+                        'priority' => $sortOrder > 0 ? $sortOrder : 1000000 + $index,
+                    ];
+                })
+                ->sortBy('priority')
+                ->pluck('category')
                 ->values()
             : $availableCategories;
         $categoryAliases = [
