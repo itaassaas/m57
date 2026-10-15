@@ -33,7 +33,7 @@ class StorefrontController extends Controller
             ]);
         }
 
-        $categories = $this->hub->categories();
+        $categories = $this->orderedCategories($this->hub->categories());
         $shuffleSeed = $request->integer('shuffle_seed') ?: random_int(1, 2147483647);
         $storefront = $this->storefrontPayload($request);
         $products = $storefront
@@ -60,6 +60,28 @@ class StorefrontController extends Controller
                 'shuffle_seed' => $shuffleSeed,
             ],
         ]);
+    }
+
+    /**
+     * Mantiene el orden editorial aun si Hub devuelve las categorías en otro
+     * orden: 1 es primero; 0/no definido usa el orden normal después.
+     */
+    private function orderedCategories(array $categories): array
+    {
+        return collect($categories)
+            ->values()
+            ->map(function (array $category, int $index): array {
+                $sortOrder = (int) ($category['sort_order'] ?? 0);
+
+                return [
+                    'category' => $category,
+                    'priority' => $sortOrder > 0 ? $sortOrder : 1000000 + $index,
+                ];
+            })
+            ->sortBy('priority')
+            ->pluck('category')
+            ->values()
+            ->all();
     }
 
     private function storefrontPayload(Request $request): ?array
@@ -300,7 +322,7 @@ class StorefrontController extends Controller
 
     public function category(Request $request, int $categoryId): View
     {
-        $categories = collect($this->hub->categories());
+        $categories = collect($this->orderedCategories($this->hub->categories()));
         $category = $categories->firstWhere('id', $categoryId);
         abort_if(! $category, 404);
 
