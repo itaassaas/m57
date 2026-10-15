@@ -70,6 +70,16 @@
         ];
         $availableCategories = collect($categories)->values();
         $visualCategories = $availableCategories->keyBy('name');
+        $visualCategoryItems = collect(data_get($storefrontConfig, 'visual_categories.items', []));
+        $hasVisualCategoryConfiguration = data_get($storefrontConfig, 'visual_categories.items') !== null;
+        $visualCategoryOrder = $visualCategoryItems
+            ->keyBy(fn (array $item) => (int) ($item['category_id'] ?? 0));
+        $visibleCategoryTiles = $hasVisualCategoryConfiguration
+            ? $availableCategories
+                ->filter(fn (array $category) => $visualCategoryOrder->has((int) ($category['id'] ?? 0)))
+                ->sortBy(fn (array $category) => (int) data_get($visualCategoryOrder->get((int) $category['id']), 'sort_order', 0))
+                ->values()
+            : $availableCategories;
         $categoryAliases = [
             'mujer' => 'Moda',
             'hombre' => 'Moda',
@@ -286,7 +296,7 @@
             <h2 class="section-title">Categorias visuales</h2>
         </div>
         <div class="category-showcase">
-            @foreach($availableCategories as $category)
+            @foreach($visibleCategoryTiles as $category)
                 @php
                     $categoryName = $category['name'];
                 @endphp
