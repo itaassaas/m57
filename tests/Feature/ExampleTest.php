@@ -339,6 +339,30 @@ class ExampleTest extends TestCase
             ->assertJsonPath('data.sizes.0.name', 'S');
     }
 
+    public function test_product_state_separates_size_from_color_when_a_legacy_name_has_no_separator(): void
+    {
+        $product = $this->fakeVariableProduct();
+        $product['variations'][] = [
+            'id' => 500,
+            'sku' => 'CAMISETA-TEJIDA-MA-384855-07',
+            'name' => 'Talla: 36 Color: Gris',
+            'attributes' => [],
+            'price' => 28000,
+            'stock' => 6,
+            'image' => null,
+        ];
+
+        $mock = Mockery::mock(HubMarketplaceApi::class);
+        $mock->shouldReceive('product')->once()->with(1917)->andReturn($product);
+        $this->app->instance(HubMarketplaceApi::class, $mock);
+
+        $this->getJson('/products/1917/state?variation_id=500')
+            ->assertOk()
+            ->assertJsonPath('data.color', 'Gris')
+            ->assertJsonPath('data.size', '36')
+            ->assertJsonPath('data.sizes.0.name', '36');
+    }
+
     public function test_checkout_renders_redesigned_layout(): void
     {
         $mock = Mockery::mock(HubMarketplaceApi::class);

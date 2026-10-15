@@ -935,7 +935,8 @@ class StorefrontController extends Controller
         // completa como etiqueta de una talla.
         $variationName = (string) ($variation['name'] ?? '');
         foreach ($aliases as $alias) {
-            if (preg_match('/(?:^|[·|,;]\s*)'.preg_quote($alias, '/').'\s*:\s*([^·|,;]+)/iu', $variationName, $matches)) {
+            $pattern = '/(?:^|[·|,;\s])'.preg_quote($alias, '/').'\s*:\s*(.+?)(?=\s+(?:color|colour|talla|size)\s*:|[·|,;]|$)/iu';
+            if (preg_match($pattern, $variationName, $matches)) {
                 return trim($matches[1]);
             }
         }

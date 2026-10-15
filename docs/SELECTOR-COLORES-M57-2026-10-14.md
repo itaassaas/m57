@@ -2,7 +2,7 @@
 
 **Fecha:** 14 de octubre de 2026  
 **Responsable:** ING Fernando Guzman  
-**Versión Hub:** `v1.0.0.0.8.7`
+**Versión Hub:** `v1.0.0.0.9.2`
 
 ## Comportamiento implementado
 
@@ -30,6 +30,8 @@ Al elegir un color o una talla, M57 consulta el estado de la variación seleccio
 ## Tallas compactas
 
 El selector se presenta como **Color** y después **Tallas**. Cada botón de talla contiene solo su valor (`S`, `M`, `L`, etc.). Como compatibilidad, una variación antigua llamada `Color: Gris · Talla: S` se interpreta internamente como color `Gris` y talla `S`.
+
+También se admite el formato legado sin separador, como `Talla: 36 Color: Gris`; tras elegir Gris, se muestra solo `36` en el selector de tallas.
 
 ## Riesgo remanente
 

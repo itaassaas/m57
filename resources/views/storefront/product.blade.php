@@ -8,13 +8,33 @@
         $reviewCount = 138 + ($productId % 240);
         $soldCount = 920 + ($productId % 1800);
         $initialPrice = (float) data_get($productState, 'price', $product['price'] ?? 0);
-        $colorMap = collect($product['variations'] ?? [])
-            ->groupBy(function (array $variation): string {
-                $color = collect((array) data_get($variation, 'attributes', []))
-                    ->first(fn (mixed $value, mixed $attribute) => mb_strtolower(trim((string) $attribute)) === 'color');
+        $variationAttribute = function (array $variation, string $name): ?string {
+            $aliases = match (mb_strtolower($name)) {
+                'color' => ['color', 'colour'],
+                'talla' => ['talla', 'size'],
+                default => [mb_strtolower($name)],
+            };
 
-                return filled($color) ? (string) $color : 'Unico';
-            })
+            foreach ((array) data_get($variation, 'attributes', []) as $attribute => $value) {
+                if (in_array(mb_strtolower(trim((string) $attribute)), $aliases, true)) {
+                    return trim((string) $value);
+                }
+            }
+
+            $variationName = (string) ($variation['name'] ?? '');
+            foreach ($aliases as $alias) {
+                $pattern = '/(?:^|[·|,;\\s])'.preg_quote($alias, '/').'\\s*:\\s*(.+?)(?=\\s+(?:color|colour|talla|size)\\s*:|[·|,;]|$)/iu';
+                if (preg_match($pattern, $variationName, $matches)) {
+                    return trim($matches[1]);
+                }
+            }
+
+            return null;
+        };
+        $colorMap = collect($product['variations'] ?? [])
+            ->map(fn (array $variation) => array_merge($variation, ['_m57_color' => $variationAttribute($variation, 'color')]))
+            ->filter(fn (array $variation) => filled($variation['_m57_color']))
+            ->groupBy('_m57_color')
             ->map(function ($items, $color) {
                 $colorName = trim((string) $color);
                 $normalizedColor = mb_strtolower($colorName);
