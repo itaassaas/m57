@@ -313,6 +313,9 @@
             gap: 20px;
             overflow: hidden;
         }
+        .hero-slide.no-products {
+            grid-template-columns: minmax(0, 1fr);
+        }
         .hero-slide-background {
             position: absolute;
             inset: 0;

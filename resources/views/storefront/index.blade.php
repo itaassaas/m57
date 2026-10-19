@@ -18,7 +18,7 @@
         $trending = $sectionItems('trending', $allProducts->slice(15, 5));
         $premium = $sectionItems('premium', $allProducts->slice(20, 5));
         $megaFeatured = $allProducts->take(3);
-        $heroSlides = [
+        $legacyHeroSlides = [
             [
                 'badge' => '✨ NUEVA TEMPORADA',
                 'title' => str_replace('|', "\n", data_get($heroConfig, 'title', "Descubre\ntu nuevo\nestilo favorito")),
@@ -42,6 +42,30 @@
                 'products' => $allProducts->slice(4, 4),
             ],
         ];
+        $configuredHeroSlides = collect(data_get($storefrontConfig, 'hero_slides', []))
+            ->filter(fn ($slide) => is_array($slide) && ($slide['is_active'] ?? false) && filled($slide['title'] ?? null))
+            ->sortBy(fn (array $slide) => (int) ($slide['sort_order'] ?? 0) ?: 1000000)
+            ->values()
+            ->map(function (array $slide) use ($allProducts) {
+                $selectedProducts = $allProducts
+                    ->whereIn('id', collect($slide['product_ids'] ?? [])->map(fn ($id) => (int) $id)->all())
+                    ->values();
+                $showProducts = (bool) ($slide['show_products'] ?? false);
+
+                return [
+                    'badge' => $slide['badge'] ?? '',
+                    'title' => str_replace('|', "\n", (string) $slide['title']),
+                    'subtitle' => $slide['subtitle'] ?? '',
+                    'cta' => $slide['cta_label'] ?: 'Comprar ahora',
+                    'cta_href' => $slide['cta_href'] ?: '#catalogo',
+                    'cta_variant' => ($slide['theme'] ?? 'midnight') === 'summer' ? 'ghost' : 'light',
+                    'theme' => in_array($slide['theme'] ?? null, ['midnight', 'summer'], true) ? $slide['theme'] : 'midnight',
+                    'image_url' => $slide['image_url'] ?? null,
+                    'show_products' => $showProducts,
+                    'products' => $showProducts ? $selectedProducts->whenEmpty(fn () => $allProducts->take(3)) : collect(),
+                ];
+            });
+        $heroSlides = $configuredHeroSlides->isNotEmpty() ? $configuredHeroSlides->all() : $legacyHeroSlides;
         $megaColumns = [
             ['title' => 'Mujer', 'links' => [['Novedades', 'Mujer'], ['Vestidos', 'Vestidos'], ['Tops', 'Tops'], ['Bottoms', 'Bottoms']]],
             ['title' => 'Hombre', 'links' => [['Camisetas', 'Hombre'], ['Jeans', 'Mezclilla'], ['Overshirts', 'Hombre'], ['Sets', 'Conjuntos']]],
@@ -280,7 +304,7 @@
         <div class="hero-carousel" data-hero-carousel>
             <div class="hero-carousel-track" data-hero-track>
                 @foreach($heroSlides as $slide)
-                    <article class="hero-slide hero-slide-{{ $slide['theme'] }}" data-hero-bg="{{ $slide['theme'] === 'summer' ? '#ff8a65' : '#0f172a' }}">
+                    <article class="hero-slide hero-slide-{{ $slide['theme'] }} {{ empty($slide['show_products']) ? 'no-products' : '' }}" data-hero-bg="{{ $slide['theme'] === 'summer' ? '#ff8a65' : '#0f172a' }}">
                         @if(filled($slide['image_url'] ?? null))
                             <img class="hero-slide-background" src="{{ $slide['image_url'] }}" alt="" aria-hidden="true" fetchpriority="high">
                         @endif
@@ -291,6 +315,7 @@
                             <a href="{{ $slide['cta_href'] }}" class="hero-slide-cta {{ $slide['cta_variant'] === 'ghost' ? 'ghost' : '' }}">{{ $slide['cta'] }}</a>
                         </div>
 
+                        @if(!empty($slide['show_products']))
                         <div class="hero-slide-products">
                             @foreach($slide['products'] as $product)
                                 <article class="card hero-product-card">
@@ -329,6 +354,7 @@
                                 </article>
                             @endforeach
                         </div>
+                        @endif
                     </article>
                 @endforeach
             </div>
