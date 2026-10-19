@@ -784,8 +784,11 @@
         }
         .mega-menu-inner {
             display: grid;
-            grid-template-columns: minmax(0, 65%) minmax(260px, 20%) minmax(260px, 15%);
-            gap: 24px;
+            /* Las dos columnas laterales tienen ancho fijo controlado y el
+               catálogo absorbe el espacio restante. Así los porcentajes no
+               se suman con el gap y no empujan las tarjetas fuera del menú. */
+            grid-template-columns: minmax(0, 1fr) minmax(220px, 280px) minmax(220px, 280px);
+            gap: 20px;
             width: min(100%, 1600px);
             margin: 0 auto;
             padding: 32px;
@@ -798,15 +801,18 @@
         .mega-menu::-webkit-scrollbar-thumb { background: rgba(17,17,17,.18); border-radius: 999px; }
         .mega-categories {
             display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 24px;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 16px;
+            min-width: 0;
         }
         .mega-column {
             display: flex;
             flex-direction: column;
-            gap: 18px;
-            padding: 28px;
+            gap: 10px;
+            min-width: 0;
+            padding: 20px;
             height: 100%;
+            box-sizing: border-box;
             background:
                 linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(249,249,249,.96) 100%);
             border: 1px solid rgba(17,17,17,.06);
@@ -902,17 +908,22 @@
             text-transform: uppercase;
             letter-spacing: .09em;
             color: var(--ink);
+            overflow-wrap: anywhere;
         }
         .mega-link {
             font-size: 13px;
+            line-height: 1.3;
             color: #3f3f46;
-            min-height: 34px;
-            padding: 0 14px;
+            min-width: 0;
+            min-height: 36px;
+            padding: 8px 10px;
             border-radius: 12px;
             display: flex;
             align-items: center;
             width: 100%;
+            box-sizing: border-box;
             border: 1px solid transparent;
+            overflow-wrap: anywhere;
             transition: transform 160ms var(--ease-out), background 160ms var(--ease-out), color 160ms var(--ease-out), border-color 160ms var(--ease-out);
         }
         .mega-link:hover {
