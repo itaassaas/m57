@@ -328,9 +328,10 @@ class StorefrontController extends Controller
 
         $sort = $request->string('sort')->toString() ?: 'newest';
         $ownerUserId = $request->integer('store');
+        $filterCategoryId = $this->effectiveCategoryFilterId($category, $categories);
         $products = $this->hub->products([
             'q' => $ownerUserId > 0 ? '' : $request->string('q')->toString(),
-            'category' => $categoryId,
+            'category' => $filterCategoryId,
             'owner_user_id' => $ownerUserId,
             'sort' => $sort,
             'page' => max(1, $request->integer('page', 1)),
@@ -341,6 +342,7 @@ class StorefrontController extends Controller
 
         return view('storefront.category', [
             'category' => $category,
+            'filterCategoryId' => $filterCategoryId,
             'categories' => $categories->values()->all(),
             'products' => $initialProducts->all(),
             'meta' => $products['meta'] ?? [],
@@ -364,15 +366,38 @@ class StorefrontController extends Controller
     public function categoryProducts(Request $request, int $categoryId): JsonResponse
     {
         $ownerUserId = $request->integer('store');
+        $categories = collect($this->orderedCategories($this->hub->categories()));
+        $category = $categories->firstWhere('id', $categoryId);
+        abort_if(! $category, 404);
 
         return response()->json($this->hub->products([
             'q' => $ownerUserId > 0 ? '' : $request->string('q')->toString(),
-            'category' => $categoryId,
+            'category' => $this->effectiveCategoryFilterId($category, $categories),
             'owner_user_id' => $ownerUserId,
             'sort' => $request->string('sort')->toString() ?: 'newest',
             'page' => max(1, $request->integer('page', 1)),
             'per_page' => 24,
         ]));
+    }
+
+    /**
+     * Las secciones "comprar por categoría" son índices dentro de una
+     * categoría principal, no un inventario independiente. Conservan su URL
+     * y su página M57, pero muestran el catálogo del padre para no ofrecer una
+     * página vacía mientras se asignan productos a subcategorías específicas.
+     *
+     * @param \Illuminate\Support\Collection<int, array<string, mixed>> $categories
+     */
+    private function effectiveCategoryFilterId(array $category, \Illuminate\Support\Collection $categories): int
+    {
+        $name = $this->searchableText((string) ($category['name'] ?? ''));
+        $parentId = (int) ($category['parent_id'] ?? 0);
+
+        if ($name === 'comprar por categoria' && $parentId > 0 && $categories->contains('id', $parentId)) {
+            return $parentId;
+        }
+
+        return (int) $category['id'];
     }
 
     public function show(int $productId): View

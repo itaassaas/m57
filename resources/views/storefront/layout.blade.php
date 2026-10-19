@@ -767,7 +767,11 @@
             padding-top: 0;
             opacity: 0;
             pointer-events: none;
-            overflow: hidden;
+            /* El catálogo maestro puede contener decenas de categorías y
+               cientos de subcategorías. El menú conserva el estilo M57 y se
+               desplaza dentro de la ventana, sin cortar enlaces. */
+            max-height: calc(100vh - 118px);
+            overflow-y: auto;
             transition: opacity 180ms var(--ease-out);
             border-top: 1px solid rgba(17,17,17,.06);
         }
@@ -790,6 +794,8 @@
             backdrop-filter: blur(14px);
             align-items: start;
         }
+        .mega-menu::-webkit-scrollbar { width: 10px; }
+        .mega-menu::-webkit-scrollbar-thumb { background: rgba(17,17,17,.18); border-radius: 999px; }
         .mega-categories {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -2236,9 +2242,11 @@
                 </div>
                 @yield('subnav_mega_menu')
             </div>
-            <a href="{{ route('home') }}" class="nav-pill">Solo para ti</a>
-            <a href="{{ route('home') }}" class="nav-pill">Novedades</a>
-            <a href="{{ route('home') }}" class="nav-pill">Ofertas</a>
+            @hasSection('subnav_links')
+                @yield('subnav_links')
+            @else
+                <a href="{{ route('home') }}" class="nav-pill">Inicio</a>
+            @endif
             <a href="{{ route('cart.show') }}" class="nav-pill {{ request()->routeIs('cart.*') ? 'active' : '' }}">Bolsa</a>
         </div>
     </div>

@@ -77,6 +77,7 @@
         $visibleCategoryTiles = $hasVisualCategoryConfiguration
             ? $availableCategories
                 ->filter(fn (array $category) => $visualCategoryOrder->has((int) ($category['id'] ?? 0)))
+                ->filter(fn (array $category) => empty($category['parent_id']))
                 ->map(function (array $category, int $index) use ($visualCategoryOrder) {
                     $sortOrder = (int) data_get($visualCategoryOrder->get((int) $category['id']), 'sort_order', 0);
 
@@ -178,6 +179,46 @@
             ->filter(fn ($url) => filled($url))
             ->all();
         $visualCategoryImages = array_replace($visualCategoryImages, $visualCategoryImageOverrides);
+
+        // El menú y los mosaicos se derivan del catálogo publicado por Hub.
+        // No se usan nombres fijos: Superadmin controla visibilidad, prioridad
+        // y jerarquía de categorías/subcategorías.
+        $mainCategories = $availableCategories->filter(fn (array $category) => empty($category['parent_id']))->values();
+        $childrenByParent = $availableCategories
+            ->filter(fn (array $category) => !empty($category['parent_id']))
+            ->groupBy(fn (array $category) => (int) $category['parent_id']);
+        $megaColumns = $mainCategories->map(function (array $category) use ($childrenByParent) {
+            $links = $childrenByParent->get((int) $category['id'], collect())
+                ->map(fn (array $child) => [
+                    'id' => (int) $child['id'],
+                    'label' => $child['name'],
+                ])
+                ->values()
+                ->all();
+
+            return [
+                'title' => $category['name'],
+                'id' => (int) $category['id'],
+                'links' => $links ?: [[
+                    'id' => (int) $category['id'],
+                    'label' => 'Ver todo',
+                ]],
+            ];
+        })->all();
+        // Todas las categorías principales publicadas aparecen en inicio. La
+        // selección visual ya no las oculta: solo prioriza y personaliza su imagen.
+        $visibleCategoryTiles = $mainCategories
+            ->map(function (array $category, int $index) use ($visualCategoryOrder) {
+                $configuredOrder = (int) data_get($visualCategoryOrder->get((int) $category['id']), 'sort_order', 0);
+
+                return [
+                    'category' => $category,
+                    'priority' => $configuredOrder > 0 ? $configuredOrder : 1000000 + $index,
+                ];
+            })
+            ->sortBy('priority')
+            ->pluck('category')
+            ->values();
     @endphp
 
     @section('subnav_mega_menu')
@@ -187,12 +228,8 @@
                     @foreach($megaColumns as $column)
                         <div class="mega-column">
                             <div class="mega-title">{{ $column['title'] }}</div>
-                            @foreach($column['links'] as [$label, $targetCategory])
-                                @php
-                                    $linkedCategory = $resolveCategory($targetCategory, $loop->parent->index + $loop->index);
-                                @endphp
-                                @continue(! $linkedCategory)
-                                <a href="{{ $linkedCategory ? route('categories.show', $linkedCategory['id']) : route('home') }}" class="mega-link">{{ $label }}</a>
+                            @foreach($column['links'] as $link)
+                                <a href="{{ route('categories.show', $link['id']) }}" class="mega-link">{{ $link['label'] }}</a>
                             @endforeach
                         </div>
                     @endforeach
@@ -200,8 +237,8 @@
 
                 <aside class="mega-rail">
                     @php
-                        $newCategory = $resolveCategory('Mujer');
-                        $offerCategory = $resolveCategory('Vestidos');
+                        $newCategory = $mainCategories->first();
+                        $offerCategory = $mainCategories->skip(1)->first() ?? $newCategory;
                     @endphp
                     <a href="{{ $newCategory ? route('categories.show', $newCategory['id']) : route('home') }}" class="mega-spotlight dark">
                         <span class="mega-spotlight-kicker">Nuevo</span>
@@ -231,6 +268,12 @@
                 </aside>
             </div>
         </div>
+    @endsection
+
+    @section('subnav_links')
+        @foreach($mainCategories->take(4) as $navigationCategory)
+            <a href="{{ route('categories.show', $navigationCategory['id']) }}" class="nav-pill">{{ $navigationCategory['name'] }}</a>
+        @endforeach
     @endsection
 
     <section class="hero-banner">
@@ -512,12 +555,9 @@
 
         <footer class="site-footer">
             @php
-                $footerLinks = [
-                    ['Mujer', $resolveCategory('Mujer', 0)],
-                    ['Hombre', $resolveCategory('Hombre', 1)],
-                    ['Calzado', $resolveCategory('Zapatos', 2)],
-                    ['Accesorios', $resolveCategory('Bolsas & Maletas', 3)],
-                ];
+                $footerLinks = $mainCategories->take(4)
+                    ->map(fn (array $category) => [$category['name'], $category])
+                    ->all();
             @endphp
             <div class="footer-grid">
                 <div>

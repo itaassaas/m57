@@ -379,7 +379,7 @@
     <div
         class="plp-shell"
         data-plp
-        data-category-id="{{ $category['id'] }}"
+        data-category-id="{{ $filterCategoryId ?? $category['id'] }}"
         data-initial-products='@json($products)'
         data-initial-meta='@json($meta)'
         data-initial-filters='@json($filters)'
@@ -431,7 +431,7 @@
                         <button type="button" class="plp-filter-toggle">Categoría <span>▾</span></button>
                         <div class="plp-filter-body plp-filter-links">
                             @foreach($categories as $linkedCategory)
-                                <a href="{{ route('categories.show', $linkedCategory['id']) }}" class="plp-filter-link {{ (int) $linkedCategory['id'] === (int) $category['id'] ? 'is-current' : '' }}">{{ $linkedCategory['name'] }}</a>
+                                <a href="{{ route('categories.show', $linkedCategory['id']) }}" class="plp-filter-link {{ (int) $linkedCategory['id'] === (int) $category['id'] ? 'is-current' : '' }} {{ !empty($linkedCategory['parent_id']) ? 'ps-3' : '' }}">{{ !empty($linkedCategory['parent_id']) ? '↳ ' : '' }}{{ $linkedCategory['name'] }}</a>
                             @endforeach
                         </div>
                     </section>
