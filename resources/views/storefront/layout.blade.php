@@ -1863,13 +1863,6 @@
             }
             .split-section { grid-template-columns: 1fr; }
         }
-        @media (max-width: 900px) {
-            .hero-slide {
-                grid-template-columns: 1fr;
-                min-height: 0;
-            }
-            .hero-slide.image-only { min-height: clamp(360px, 58vw, 520px); }
-        }
         @media (max-width: 980px) {
             .layout,
             .split,
@@ -1903,6 +1896,7 @@
                 min-height: 0;
             }
             .hero-slide {
+                grid-template-columns: 1fr;
                 min-height: auto;
                 padding: 24px 16px 64px;
                 gap: 18px;
