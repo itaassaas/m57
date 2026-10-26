@@ -1883,20 +1883,24 @@
                 margin-bottom: 18px;
             }
             .hero-slide-products {
-                grid-template-columns: 1fr;
+                grid-template-columns: minmax(0, 184px);
                 gap: 12px;
+                justify-items: start;
             }
             .hero-product-card {
-                max-width: none;
+                max-width: 184px;
             }
             .hero-slide-products .hero-product-card:nth-child(n+2) {
                 display: none;
             }
+            .hero-product-media {
+                aspect-ratio: 4 / 5;
+            }
+            .hero-product-card .card-body {
+                padding: 10px;
+            }
             .hero-carousel-arrow {
-                width: 40px;
-                height: 40px;
-                margin-top: -20px;
-                font-size: 24px;
+                display: none;
             }
             .hero-main {
                 min-height: calc(100svh - 214px);
