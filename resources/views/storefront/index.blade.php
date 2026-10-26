@@ -340,7 +340,7 @@
                             'opacity: '.$imageOpacity,
                         ])->filter()->implode('; ');
                     @endphp
-                    <article class="hero-slide hero-slide-{{ $slide['theme'] }} {{ empty($slide['show_products']) ? 'no-products' : '' }} {{ !$showOverlay ? 'no-overlay' : '' }} {{ ($slide['content_align'] ?? 'left') !== 'left' ? 'content-align-'.$slide['content_align'] : '' }} {{ !empty($slide['show_products']) && ($slide['content_align'] ?? 'left') === 'right' ? 'products-on-left' : '' }}" data-hero-bg="{{ $slide['theme'] === 'summer' ? '#ff8a65' : '#0f172a' }}">
+                    <article class="hero-slide hero-slide-{{ $slide['theme'] }} {{ empty($slide['show_products']) ? 'no-products' : '' }} {{ !$showOverlay ? 'no-overlay' : '' }} {{ ($slide['content_align'] ?? 'left') !== 'left' ? 'content-align-'.$slide['content_align'] : '' }} {{ !empty($slide['show_products']) ? 'products-on-left' : '' }}" data-hero-bg="{{ $slide['theme'] === 'summer' ? '#ff8a65' : '#0f172a' }}">
                         @if(filled($slide['image_url'] ?? null) || filled($slide['mobile_image_url'] ?? null))
                             <picture>
                                 @if(filled($slide['mobile_image_url'] ?? null))
