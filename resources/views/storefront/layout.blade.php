@@ -326,6 +326,12 @@
             opacity: .34;
             pointer-events: none;
         }
+        /* Opciones de Superadmin: sin tocar la composición base del banner. */
+        .hero-slide.no-overlay::before,
+        .hero-slide.no-overlay::after,
+        .hero-slide.no-overlay .hero-slide-copy::after {
+            display: none;
+        }
         .hero-slide::before,
         .hero-slide::after {
             content: "";
@@ -401,6 +407,16 @@
             flex-direction: column;
             align-self: center;
             max-width: 520px;
+        }
+        .hero-slide.content-align-center .hero-slide-copy {
+            margin-inline: auto;
+            text-align: center;
+            align-items: center;
+        }
+        .hero-slide.content-align-right .hero-slide-copy {
+            margin-left: auto;
+            text-align: right;
+            align-items: flex-end;
         }
         .hero-slide-badge {
             display: inline-flex;
