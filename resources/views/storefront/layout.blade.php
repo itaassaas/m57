@@ -303,13 +303,15 @@
             transition: transform 300ms var(--ease-out);
         }
         .hero-slide {
+            --hero-overlay-opacity: .55;
+            --hero-image-fit: cover;
             position: relative;
             flex: 0 0 100%;
             min-width: 100%;
             min-height: 520px;
             padding: 48px;
             display: grid;
-            grid-template-columns: 55% 45%;
+            grid-template-columns: minmax(0, 55%) minmax(0, 45%);
             gap: 20px;
             overflow: hidden;
         }
@@ -322,27 +324,24 @@
             z-index: 0;
             width: 100%;
             height: 100%;
-            object-fit: cover;
-            opacity: .34;
+            object-fit: var(--hero-image-fit);
+            opacity: 1;
             pointer-events: none;
         }
-        .hero-slide::before,
+        .hero-slide::before {
+            content: "";
+            position: absolute;
+            pointer-events: none;
+            z-index: 1;
+            inset: 0;
+            background: linear-gradient(90deg, rgba(15,23,42,var(--hero-overlay-opacity)) 0%, rgba(15,23,42,var(--hero-overlay-opacity)) 52%, rgba(15,23,42,0) 100%);
+        }
         .hero-slide::after {
             content: "";
             position: absolute;
             border-radius: 999px;
             pointer-events: none;
             z-index: 1;
-        }
-        .hero-slide::before {
-            width: 340px;
-            height: 340px;
-            right: -90px;
-            top: -90px;
-            background: rgba(255,255,255,.09);
-            filter: blur(10px);
-        }
-        .hero-slide::after {
             width: 220px;
             height: 220px;
             left: 42%;
@@ -388,11 +387,25 @@
             color: #fff;
         }
         .hero-slide.summer::before {
-            background: rgba(255,255,255,.16);
+            background: linear-gradient(90deg, rgba(107,33,24,var(--hero-overlay-opacity)) 0%, rgba(107,33,24,var(--hero-overlay-opacity)) 55%, rgba(107,33,24,0) 100%);
         }
         .hero-slide.summer::after {
             background: rgba(255,255,255,.14);
         }
+        .hero-slide.no-overlay::before,
+        .hero-slide.no-overlay::after,
+        .hero-slide.no-overlay .hero-slide-copy::after {
+            display: none;
+        }
+        .hero-slide.image-only {
+            display: block;
+            padding: 0;
+        }
+        .hero-slide.image-position-left .hero-slide-background { object-position: left center; }
+        .hero-slide.image-position-center .hero-slide-background { object-position: center; }
+        .hero-slide.image-position-right .hero-slide-background { object-position: right center; }
+        .hero-slide.image-position-top .hero-slide-background { object-position: center top; }
+        .hero-slide.image-position-bottom .hero-slide-background { object-position: center bottom; }
         .hero-slide-copy {
             position: relative;
             z-index: 2;
@@ -401,6 +414,16 @@
             flex-direction: column;
             align-self: center;
             max-width: 520px;
+        }
+        .hero-slide.content-align-center .hero-slide-copy {
+            margin-inline: auto;
+            text-align: center;
+            align-items: center;
+        }
+        .hero-slide.content-align-right .hero-slide-copy {
+            margin-left: auto;
+            text-align: right;
+            align-items: flex-end;
         }
         .hero-slide-badge {
             display: inline-flex;
@@ -1817,8 +1840,10 @@
             .product-strip { grid-template-columns: repeat(4, minmax(0, 1fr)); }
             .hero-slide {
                 grid-template-columns: 1fr;
+                min-height: 0;
                 padding: 36px 28px 68px;
             }
+            .hero-slide.image-only { min-height: clamp(360px, 58vw, 520px); padding: 0; }
             .hero-slide-products {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
@@ -1874,6 +1899,10 @@
                 min-height: auto;
                 padding: 24px 16px 64px;
                 gap: 18px;
+            }
+            .hero-slide.image-only {
+                min-height: clamp(280px, 90vw, 460px);
+                padding: 0;
             }
             .hero-slide-title {
                 font-size: clamp(34px, 11vw, 48px);

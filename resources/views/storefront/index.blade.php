@@ -43,7 +43,13 @@
             ],
         ];
         $configuredHeroSlides = collect(data_get($storefrontConfig, 'hero_slides', []))
-            ->filter(fn ($slide) => is_array($slide) && ($slide['is_active'] ?? false) && filled($slide['title'] ?? null))
+            ->filter(fn ($slide) => is_array($slide) && ($slide['is_active'] ?? false) && (
+                filled($slide['title'] ?? null)
+                || filled($slide['subtitle'] ?? null)
+                || filled($slide['badge'] ?? null)
+                || filled($slide['image_url'] ?? null)
+                || filled($slide['mobile_image_url'] ?? null)
+            ))
             ->sortBy(fn (array $slide) => (int) ($slide['sort_order'] ?? 0) ?: 1000000)
             ->values()
             ->map(function (array $slide) use ($allProducts) {
@@ -56,11 +62,21 @@
                     'badge' => $slide['badge'] ?? '',
                     'title' => str_replace('|', "\n", (string) $slide['title']),
                     'subtitle' => $slide['subtitle'] ?? '',
-                    'cta' => $slide['cta_label'] ?: 'Comprar ahora',
+                    'cta' => $slide['cta_label'] ?? '',
                     'cta_href' => $slide['cta_href'] ?: '#catalogo',
                     'cta_variant' => ($slide['theme'] ?? 'midnight') === 'summer' ? 'ghost' : 'light',
                     'theme' => in_array($slide['theme'] ?? null, ['midnight', 'summer'], true) ? $slide['theme'] : 'midnight',
                     'image_url' => $slide['image_url'] ?? null,
+                    'mobile_image_url' => $slide['mobile_image_url'] ?? null,
+                    'content_align' => in_array($slide['content_align'] ?? null, ['left', 'center', 'right'], true) ? $slide['content_align'] : 'left',
+                    'image_fit' => in_array($slide['image_fit'] ?? null, ['cover', 'contain'], true) ? $slide['image_fit'] : 'cover',
+                    'image_position' => in_array($slide['image_position'] ?? null, ['left', 'center', 'right', 'top', 'bottom'], true) ? $slide['image_position'] : 'center',
+                    'show_badge' => array_key_exists('show_badge', $slide) ? (bool) $slide['show_badge'] : true,
+                    'show_title' => array_key_exists('show_title', $slide) ? (bool) $slide['show_title'] : true,
+                    'show_subtitle' => array_key_exists('show_subtitle', $slide) ? (bool) $slide['show_subtitle'] : true,
+                    'show_cta' => array_key_exists('show_cta', $slide) ? (bool) $slide['show_cta'] : true,
+                    'show_overlay' => array_key_exists('show_overlay', $slide) ? (bool) $slide['show_overlay'] : true,
+                    'overlay_opacity' => max(0, min(90, (int) ($slide['overlay_opacity'] ?? 55))),
                     'show_products' => $showProducts,
                     'products' => $showProducts ? $selectedProducts->whenEmpty(fn () => $allProducts->take(3)) : collect(),
                 ];
@@ -304,16 +320,33 @@
         <div class="hero-carousel" data-hero-carousel>
             <div class="hero-carousel-track" data-hero-track>
                 @foreach($heroSlides as $slide)
-                    <article class="hero-slide hero-slide-{{ $slide['theme'] }} {{ empty($slide['show_products']) ? 'no-products' : '' }}" data-hero-bg="{{ $slide['theme'] === 'summer' ? '#ff8a65' : '#0f172a' }}">
-                        @if(filled($slide['image_url'] ?? null))
-                            <img class="hero-slide-background" src="{{ $slide['image_url'] }}" alt="" aria-hidden="true" fetchpriority="high">
+                    @php
+                        $showBadge = (!array_key_exists('show_badge', $slide) || !empty($slide['show_badge'])) && filled($slide['badge'] ?? null);
+                        $showTitle = (!array_key_exists('show_title', $slide) || !empty($slide['show_title'])) && filled($slide['title'] ?? null);
+                        $showSubtitle = (!array_key_exists('show_subtitle', $slide) || !empty($slide['show_subtitle'])) && filled($slide['subtitle'] ?? null);
+                        $showCta = (!array_key_exists('show_cta', $slide) || !empty($slide['show_cta'])) && filled($slide['cta'] ?? null);
+                        $showOverlay = !array_key_exists('show_overlay', $slide) || !empty($slide['show_overlay']);
+                        $hasCopy = $showBadge || $showTitle || $showSubtitle || $showCta;
+                        $isImageOnly = ! $hasCopy && empty($slide['show_products']);
+                        $overlayOpacity = $showOverlay ? ((int) ($slide['overlay_opacity'] ?? 55) / 100) : 0;
+                    @endphp
+                    <article class="hero-slide {{ $slide['theme'] }} {{ empty($slide['show_products']) ? 'no-products' : '' }} {{ !$showOverlay ? 'no-overlay' : '' }} {{ $isImageOnly ? 'image-only' : '' }} content-align-{{ $slide['content_align'] ?? 'left' }} image-position-{{ $slide['image_position'] ?? 'center' }}" style="--hero-overlay-opacity: {{ $overlayOpacity }}; --hero-image-fit: {{ $slide['image_fit'] ?? 'cover' }};" data-hero-bg="{{ $slide['theme'] === 'summer' ? '#ff8a65' : '#0f172a' }}">
+                        @if(filled($slide['image_url'] ?? null) || filled($slide['mobile_image_url'] ?? null))
+                            <picture>
+                                @if(filled($slide['mobile_image_url'] ?? null))
+                                    <source media="(max-width: 760px)" srcset="{{ $slide['mobile_image_url'] }}">
+                                @endif
+                                <img class="hero-slide-background" src="{{ $slide['image_url'] ?? $slide['mobile_image_url'] }}" alt="" aria-hidden="true" fetchpriority="high">
+                            </picture>
                         @endif
-                        <div class="hero-slide-copy">
-                            <span class="hero-slide-badge">{{ $slide['badge'] }}</span>
-                            <h1 class="hero-slide-title">{!! nl2br(e($slide['title'])) !!}</h1>
-                            <p class="hero-slide-subtitle">{{ $slide['subtitle'] }}</p>
-                            <a href="{{ $slide['cta_href'] }}" class="hero-slide-cta {{ $slide['cta_variant'] === 'ghost' ? 'ghost' : '' }}">{{ $slide['cta'] }}</a>
-                        </div>
+                        @if($hasCopy)
+                            <div class="hero-slide-copy">
+                                @if($showBadge)<span class="hero-slide-badge">{{ $slide['badge'] }}</span>@endif
+                                @if($showTitle)<h1 class="hero-slide-title">{!! nl2br(e($slide['title'])) !!}</h1>@endif
+                                @if($showSubtitle)<p class="hero-slide-subtitle">{{ $slide['subtitle'] }}</p>@endif
+                                @if($showCta)<a href="{{ $slide['cta_href'] }}" class="hero-slide-cta {{ $slide['cta_variant'] === 'ghost' ? 'ghost' : '' }}">{{ $slide['cta'] }}</a>@endif
+                            </div>
+                        @endif
 
                         @if(!empty($slide['show_products']))
                         <div class="hero-slide-products">
