@@ -418,6 +418,18 @@
             text-align: right;
             align-items: flex-end;
         }
+        /* En escritorio, el bloque de productos siempre acompaña al texto desde el lado opuesto. */
+        .hero-slide.products-on-left {
+            grid-template-columns: 45% 55%;
+        }
+        .hero-slide.products-on-left .hero-slide-products {
+            grid-column: 1;
+            grid-row: 1;
+        }
+        .hero-slide.products-on-left .hero-slide-copy {
+            grid-column: 2;
+            grid-row: 1;
+        }
         .hero-slide-badge {
             display: inline-flex;
             align-items: center;
