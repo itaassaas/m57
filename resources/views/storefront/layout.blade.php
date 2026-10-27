@@ -418,6 +418,17 @@
             text-align: right;
             align-items: flex-end;
         }
+        /* Posición explícita en pantalla amplia: productos siempre a la derecha. */
+        @media (min-width: 1141px) {
+            .hero-slide:not(.no-products) .hero-slide-copy {
+                grid-column: 1;
+                grid-row: 1;
+            }
+            .hero-slide:not(.no-products) .hero-slide-products {
+                grid-column: 2;
+                grid-row: 1;
+            }
+        }
         .hero-slide-badge {
             display: inline-flex;
             align-items: center;
