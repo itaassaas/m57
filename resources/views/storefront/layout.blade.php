@@ -418,21 +418,6 @@
             text-align: right;
             align-items: flex-end;
         }
-        /* En escritorio, las tarjetas quedan fijas al lado izquierdo. */
-        @media (min-width: 1141px) {
-            .hero-slide.products-on-left {
-                grid-template-columns: 45% 55%;
-            }
-            .hero-slide.products-on-left .hero-slide-products {
-                grid-column: 1;
-                grid-row: 1;
-                justify-items: start;
-            }
-            .hero-slide.products-on-left .hero-slide-copy {
-                grid-column: 2;
-                grid-row: 1;
-            }
-        }
         .hero-slide-badge {
             display: inline-flex;
             align-items: center;
