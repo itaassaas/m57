@@ -1,5 +1,10 @@
 <!doctype html>
 <html lang="es">
+@php
+    $layoutBrand = data_get($storefrontConfig ?? [], 'brand', []);
+    $layoutBrandLogo = data_get($layoutBrand, 'logo_url');
+    $layoutBrandName = data_get($layoutBrand, 'name', 'M57');
+@endphp
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -135,6 +140,17 @@
             color: var(--ink);
         }
         .brand-logo {
+            display: none;
+        }
+        .brand.has-custom-logo .brand-logo {
+            display: block;
+            width: auto;
+            height: 52px;
+            max-width: 170px;
+            object-fit: contain;
+            object-position: left center;
+        }
+        .brand.has-custom-logo .brand-wordmark {
             display: none;
         }
         .brand-wordmark {
@@ -2267,9 +2283,11 @@
 
     <header class="topbar {{ ($headerVariant ?? null) === 'light' ? 'topbar--light' : '' }}">
         <div class="shell topbar-inner">
-            <a href="{{ route('home') }}" class="brand">
-                <img src="{{ asset('storage/logo.png') }}" alt="M57" class="brand-logo">
-                <span class="brand-wordmark">M57</span>
+            <a href="{{ route('home') }}" class="brand {{ $layoutBrandLogo ? 'has-custom-logo' : '' }}">
+                @if($layoutBrandLogo)
+                    <img src="{{ $layoutBrandLogo }}" alt="{{ $layoutBrandName }}" class="brand-logo">
+                @endif
+                <span class="brand-wordmark">{{ $layoutBrandName }}</span>
             </a>
             <form class="searchbar" method="get" action="{{ route('home') }}">
                 <span>⌕</span>
