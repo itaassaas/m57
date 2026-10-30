@@ -26,14 +26,15 @@ class StorefrontController extends Controller
             return $this->category($request, $request->integer('category'));
         }
 
-        if ($destination = $this->matchingStoreSearchDestination($request)) {
+        $categories = $this->orderedCategories($this->hub->categories());
+
+        if ($destination = $this->matchingStoreSearchDestination($request, $categories)) {
             return redirect()->route('categories.show', [
                 'categoryId' => $destination['category_id'],
                 'store' => $destination['owner_id'],
             ]);
         }
 
-        $categories = $this->orderedCategories($this->hub->categories());
         $shuffleSeed = $request->integer('shuffle_seed') ?: random_int(1, 2147483647);
         $storefront = $this->storefrontPayload($request);
         $products = $storefront
@@ -261,7 +262,10 @@ class StorefrontController extends Controller
      * Cuando la consulta identifica una sola marca, se prioriza la navegación
      * a su categoría principal con el catálogo limitado a esa empresa.
      */
-    private function matchingStoreSearchDestination(Request $request): ?array
+    /**
+     * @param array<int, array<string, mixed>> $categories
+     */
+    private function matchingStoreSearchDestination(Request $request, array $categories): ?array
     {
         $term = trim($request->string('q')->toString());
         if ($term === '') {
@@ -285,8 +289,17 @@ class StorefrontController extends Controller
         }
 
         $ownerId = (int) $matches->keys()->first();
-        $categoryId = (int) data_get($matches->first()->first(), 'categories.0.id', 0);
+        $visibleCategoryIds = collect($categories)->pluck('id')->map(fn ($id) => (int) $id);
+        $categoryId = $matches->first()
+            ->flatMap(fn (array $product) => $product['categories'] ?? [])
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->first(fn (int $id) => $visibleCategoryIds->contains($id));
 
+        // Los productos pueden conservar categorías históricas que ya no están
+        // publicadas en el árbol M57. Redirigir a una de ellas causaba 404.
+        // Si no existe una categoría navegable, se conserva la búsqueda normal
+        // por marca en la portada, que sí consulta el catálogo vigente.
         return $categoryId > 0
             ? ['owner_id' => $ownerId, 'category_id' => $categoryId]
             : null;

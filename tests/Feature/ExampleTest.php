@@ -19,11 +19,52 @@ class ExampleTest extends TestCase
                 'categories' => [['id' => 14, 'name' => 'Moda']],
             ]],
         ]);
+        $mock->shouldReceive('categories')->once()->andReturn([
+            ['id' => 14, 'name' => 'Moda'],
+        ]);
 
         $this->app->instance(HubMarketplaceApi::class, $mock);
 
         $this->get('/?q=cannabis')
             ->assertRedirect(route('categories.show', ['categoryId' => 14, 'store' => 77]));
+    }
+
+    public function test_store_search_does_not_redirect_to_a_category_that_is_not_published_in_m57(): void
+    {
+        $mock = Mockery::mock(HubMarketplaceApi::class);
+        $mock->shouldReceive('trackEvent')->byDefault();
+        $mock->shouldReceive('categories')->once()->andReturn([]);
+        $mock->shouldReceive('allProducts')->once()->withNoArgs()->andReturn([
+            'data' => [[
+                'id' => 902,
+                'name' => 'Producto de marca',
+                'owner' => ['id' => 78, 'name' => 'Marca histórica'],
+                'categories' => [['id' => 999, 'name' => 'Categoría retirada']],
+            ]],
+        ]);
+        $mock->shouldReceive('storefrontHome')->once()->andReturn([]);
+        $mock->shouldReceive('allProducts')->once()->with(Mockery::on(fn (array $query) => (
+            ($query['q'] ?? null) === 'historica'
+        )))->andReturn([
+            'data' => [[
+                'id' => 902,
+                'name' => 'Producto de marca',
+                'sku' => 'MAR-902',
+                'price' => 50000,
+                'stock' => 2,
+                'image' => null,
+                'owner' => ['id' => 78, 'name' => 'Marca histórica'],
+                'categories' => [],
+            ]],
+            'meta' => ['total' => 1],
+        ]);
+        $mock->shouldReceive('storefrontConfig')->once()->andReturn([]);
+
+        $this->app->instance(HubMarketplaceApi::class, $mock);
+
+        $this->get('/?q=historica')
+            ->assertOk()
+            ->assertSee('Producto de marca');
     }
 
     public function test_home_renders_marketplace_products(): void
