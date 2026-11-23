@@ -2001,7 +2001,7 @@
                 padding-top: 6px;
             }
             .slide-drawer {
-                --drawer-tab-width: 40px;
+                --drawer-tab-width: 32px;
                 --drawer-panel-width: min(320px, calc(100vw - 18px - var(--drawer-tab-width)));
                 top: auto;
                 bottom: 18px;
@@ -2016,6 +2016,15 @@
             }
             .slide-drawer-tab {
                 border-radius: 18px 0 0 18px;
+                padding: 10px 0;
+                gap: 7px;
+            }
+            .slide-drawer-tab-text {
+                font-size: 11px;
+                letter-spacing: .07em;
+            }
+            .slide-drawer-tab-arrow {
+                font-size: 18px;
             }
             .cookie-settings-trigger {
                 left: 12px;
