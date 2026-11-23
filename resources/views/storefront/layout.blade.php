@@ -1914,9 +1914,17 @@
                 min-height: 0;
             }
             .hero-slide {
-                min-height: auto;
+                /* El banner no puede depender de texto/productos para tener
+                   altura: los banners editoriales pueden ser solo imagen. */
+                min-height: clamp(420px, 128vw, 560px);
                 padding: 24px 16px 64px;
                 gap: 18px;
+            }
+            .hero-slide.no-products {
+                grid-template-rows: minmax(0, 1fr);
+            }
+            .hero-slide.no-products .hero-slide-copy {
+                align-self: end;
             }
             .hero-slide-title {
                 font-size: clamp(34px, 11vw, 48px);
@@ -2120,6 +2128,9 @@
             }
             .hero-slide {
                 padding: 22px 14px 58px;
+            }
+            .hero-slide-background {
+                object-position: center center;
             }
             .hero-slide-copy {
                 max-width: none;

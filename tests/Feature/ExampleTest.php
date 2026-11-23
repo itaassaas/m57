@@ -76,6 +76,14 @@ class ExampleTest extends TestCase
             'hero' => [
                 'image_url' => 'https://example.com/m57-hero.jpg',
             ],
+            'hero_slides' => [[
+                'title' => 'Banner adaptable',
+                'image_url' => 'https://example.com/m57-desktop-banner.jpg',
+                'mobile_image_url' => 'https://example.com/m57-mobile-banner.jpg',
+                'cta_href' => '#catalogo',
+                'is_active' => true,
+                'sort_order' => 1,
+            ]],
             'visual_categories' => [
                 'images' => [
                     'Moda' => 'https://example.com/m57-category-moda.jpg',
@@ -169,7 +177,8 @@ class ExampleTest extends TestCase
             ->assertSee('Vestido prueba')
             ->assertSee('Bolso visual')
             ->assertSee('Hub Demo')
-            ->assertSee('https://example.com/m57-hero.jpg')
+            ->assertSee('https://example.com/m57-desktop-banner.jpg')
+            ->assertSee('media="(max-width: 760px)" srcset="https://example.com/m57-mobile-banner.jpg"', false)
             ->assertSee('https://example.com/m57-category-moda.jpg')
             ->assertSee('<div class="category-name">Moda</div>', false)
             ->assertSee('<div class="category-name">Tecnología</div>', false)
