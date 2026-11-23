@@ -2015,6 +2015,9 @@
                 padding: 18px;
             }
             .slide-drawer-tab {
+                top: calc(50% - 74px);
+                bottom: auto;
+                height: 148px;
                 border-radius: 18px 0 0 18px;
                 padding: 10px 0;
                 gap: 7px;
